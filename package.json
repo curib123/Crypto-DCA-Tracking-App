@@ -1,0 +1,25 @@
+{
+  "name": "crypto-dca-tracking-app",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.17.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "db:generate": "pnpm --filter @crypto-dca/api prisma:generate",
+    "db:migrate": "pnpm --filter @crypto-dca/api prisma:migrate",
+    "db:seed": "pnpm --filter @crypto-dca/api prisma:seed",
+    "docker:dev": "docker compose up --build",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d --build"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
+  }
+}
