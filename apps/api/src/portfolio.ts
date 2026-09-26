@@ -83,7 +83,9 @@ export class PortfolioService {
       totals: {
         ...totals,
         lifetimePnl: totals.unrealizedPnl + totals.realizedPnl,
-        returnPct: percentageChange(totals.currentValue, totals.invested),
+        returnPct: totals.invested
+          ? ((totals.unrealizedPnl + totals.realizedPnl) / totals.invested) * 100
+          : 0,
       },
       assets,
     };
