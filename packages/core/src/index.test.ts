@@ -1,0 +1,22 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { calculateAssetPosition } from "./index.js";
+
+test("weighted average uses contribution and quantity", () => {
+  const result = calculateAssetPosition([
+    { type: "BUY", quantity: 1, amountBase: 100, feeBase: 0, occurredAt: "2026-01-01" },
+    { type: "BUY", quantity: 1, amountBase: 200, feeBase: 0, occurredAt: "2026-01-02" },
+  ]);
+  assert.equal(result.quantity, 2);
+  assert.equal(result.averageEntry, 150);
+});
+
+test("sell realizes pnl and removes cost at weighted average", () => {
+  const result = calculateAssetPosition([
+    { type: "BUY", quantity: 2, amountBase: 200, feeBase: 0, occurredAt: "2026-01-01" },
+    { type: "SELL", quantity: 1, amountBase: 150, feeBase: 0, occurredAt: "2026-01-02" },
+  ]);
+  assert.equal(result.quantity, 1);
+  assert.equal(result.remainingCostBasis, 100);
+  assert.equal(result.realizedPnl, 50);
+});
