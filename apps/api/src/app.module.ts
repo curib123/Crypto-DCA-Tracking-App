@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
-import { AuthController, AuthService } from "./auth";
+import { AuthController, AuthService, JwtAuthGuard } from "./auth";
 import { HealthController } from "./health";
 import { MarketController, MarketService } from "./market";
 import { PortfolioController, PortfolioService } from "./portfolio";
@@ -30,6 +30,7 @@ import { TransactionsController, TransactionsService } from "./transactions";
   providers: [
     PrismaService,
     AuthService,
+    JwtAuthGuard,
     TransactionsService,
     PortfolioService,
     MarketService,
