@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateAssetPosition } from "./index.js";
+import { calculateAssetPosition } from "./index";
 
 test("weighted average uses contribution and quantity", () => {
   const result = calculateAssetPosition([
