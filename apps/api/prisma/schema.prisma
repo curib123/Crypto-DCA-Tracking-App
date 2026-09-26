@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  BUY
+  SELL
+  TRANSFER_IN
+  TRANSFER_OUT
+  AIRDROP
+  REWARD
+  STAKING_REWARD
+  FEE
+  ADJUSTMENT
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  baseCurrency String        @default("USD")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+model Transaction {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetSymbol    String
+  type           TransactionType
+  quantity       Decimal         @db.Decimal(36, 18)
+  unitPrice      Decimal         @db.Decimal(36, 8)
+  amountSpent    Decimal         @db.Decimal(36, 8)
+  quoteCurrency  String
+  fxRateToBase   Decimal         @default(1) @db.Decimal(36, 12)
+  feeBase        Decimal         @default(0) @db.Decimal(36, 8)
+  exchange       String?
+  wallet         String?
+  notes          String?
+  occurredAt     DateTime
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([userId, occurredAt])
+  @@index([userId, assetSymbol])
+}
