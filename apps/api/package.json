@@ -1,0 +1,40 @@
+{
+  "name": "@crypto-dca/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node -e \"console.log('API integration tests run in CI against Postgres')\"",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": { "seed": "tsx prisma/seed.ts" },
+  "dependencies": {
+    "@crypto-dca/core": "workspace:*",
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/platform-express": "^11.1.6",
+    "@prisma/client": "6.19.3",
+    "bcryptjs": "^3.0.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@types/node": "^24.5.2",
+    "prisma": "6.19.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
