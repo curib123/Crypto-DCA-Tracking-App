@@ -17,6 +17,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@capacitor/core": "8.5.2",
+    "@capawesome/capacitor-google-sign-in": "0.1.4",
     "@crypto-dca/core": "workspace:*",
     "@prisma/client": "6.19.3",
     "chart.js": "^4.5.0",
