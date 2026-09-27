@@ -192,8 +192,8 @@ export function DashboardClient() {
         <Link href="/app/portfolio">
           <span>◫</span><strong>Portfolio</strong><small>View every position</small>
         </Link>
-        <Link href="/app/market">
-          <span>↗</span><strong>Market</strong><small>Check live context</small>
+        <Link href="/app/dca-plans">
+          <span>◎</span><strong>DCA plans</strong><small>Set your cadence</small>
         </Link>
       </section>
 
