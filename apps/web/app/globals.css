@@ -1359,3 +1359,10 @@ tbody tr:last-child td {
     justify-content: space-between;
   }
 }
+
+
+@media (max-width: 720px) {
+  .app-topbar > .topbar-actions {
+    display: flex;
+  }
+}
