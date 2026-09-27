@@ -20,3 +20,15 @@ test("sell realizes pnl and removes cost at weighted average", () => {
   assert.equal(result.remainingCostBasis, 100);
   assert.equal(result.realizedPnl, 50);
 });
+
+
+test("wallet transfers do not change aggregate quantity or cost basis", () => {
+  const result = calculateAssetPosition([
+    { type: "BUY", quantity: 1, amountBase: 100, feeBase: 0, occurredAt: "2026-01-01" },
+    { type: "TRANSFER_OUT", quantity: 1, amountBase: 0, feeBase: 0, occurredAt: "2026-01-02" },
+    { type: "TRANSFER_IN", quantity: 1, amountBase: 0, feeBase: 0, occurredAt: "2026-01-03" },
+  ]);
+  assert.equal(result.quantity, 1);
+  assert.equal(result.remainingCostBasis, 100);
+  assert.equal(result.averageEntry, 100);
+});
