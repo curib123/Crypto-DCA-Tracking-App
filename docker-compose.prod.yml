@@ -30,9 +30,11 @@ services:
       DEFAULT_BASE_CURRENCY: ${DEFAULT_BASE_CURRENCY:-USD}
       COINGECKO_DEMO_API_KEY: ${COINGECKO_DEMO_API_KEY:-}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
-      AI_API_URL: ${AI_API_URL:-}
-      AI_API_KEY: ${AI_API_KEY:-}
-      AI_MODEL: ${AI_MODEL:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      MISTRAL_MODEL: ${MISTRAL_MODEL:-mistral-small-latest}
+      MISTRAL_API_URL: ${MISTRAL_API_URL:-https://api.mistral.ai/v1/chat/completions}
+      MISTRAL_TIMEOUT_MS: ${MISTRAL_TIMEOUT_MS:-12000}
+      MISTRAL_MAX_RETRIES: ${MISTRAL_MAX_RETRIES:-1}
     depends_on:
       postgres:
         condition: service_healthy

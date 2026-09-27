@@ -49,8 +49,8 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
       description: "Use focused charts for allocation and performance where a visual actually adds information.",
     },
     {
-      title: "AI insights",
-      description: "Turn your own portfolio data into explainable observations without giving the model custody or trading access.",
+      title: "Mistral AI insights",
+      description: "Use Mistral to explain your calculated portfolio analytics without giving the model custody or trading access.",
     },
   ],
   faq: [

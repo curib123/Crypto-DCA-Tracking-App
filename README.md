@@ -166,19 +166,31 @@ After an account receives the `ADMIN` role, the NextFi app exposes the Admin lin
 
 An admin cannot suspend or demote their own account through the control panel. Suspended users are rejected at sign-in and by authenticated API guards.
 
-## AI insights
+## Mistral AI insights
 
-NextFi works with **no paid AI dependency**. When no AI provider is configured, the Insights screen still returns deterministic analytics-only observations such as portfolio concentration, DCA cadence, tracked fee impact, and position status.
-
-To enable optional AI-assisted explanations, configure an OpenAI-compatible chat endpoint:
+NextFi uses the **Mistral Chat Completions API** for optional AI-assisted portfolio explanations. The default endpoint and model are:
 
 ```
-AI_API_URL=https://your-provider.example/v1/chat/completions
-AI_MODEL=your-model
-AI_API_KEY=your-server-side-key
+MISTRAL_API_URL=https://api.mistral.ai/v1/chat/completions
+MISTRAL_MODEL=mistral-small-latest
 ```
 
-The API key stays server-side. The model receives a reduced analytics context (portfolio totals, asset-level calculated values, and deterministic observations), not wallet keys or custody credentials. The AI layer is instructed not to predict prices or issue buy/sell/hold instructions. Requests are throttled and cached to reduce cost and provider traffic.
+Add your Mistral API key only on the server:
+
+```
+MISTRAL_API_KEY=your-mistral-api-key
+```
+
+Optional reliability settings:
+
+```
+MISTRAL_TIMEOUT_MS=12000
+MISTRAL_MAX_RETRIES=1
+```
+
+If `MISTRAL_API_KEY` is blank, unavailable, rate-limited, or the Mistral request fails, the Insights screen automatically falls back to deterministic analytics-only observations such as portfolio concentration, DCA cadence, tracked fee impact, and position status.
+
+The Mistral API key is never exposed to the PWA. The model receives a reduced analytics context containing portfolio totals, asset-level calculated values, and deterministic observations—not wallet keys, seed phrases, or custody credentials. Mistral does not calculate NextFi's cost basis or P/L; those numbers continue to come from the ledger calculation engine. AI requests are throttled, cached for 10 minutes per user, time-limited, and retry only on transient provider errors.
 
 
 ## Multi-currency model
@@ -323,7 +335,14 @@ Optional but recommended for live market data:
 COINGECKO_DEMO_API_KEY=<free-demo-key>
 ```
 
-CoinGecko's Demo plan is $0/month. The key must stay server-side and is never exposed to the PWA.
+Optional Mistral-powered portfolio explanations:
+
+```
+MISTRAL_API_KEY=<your-mistral-api-key>
+MISTRAL_MODEL=mistral-small-latest
+```
+
+CoinGecko's Demo key and the Mistral API key must stay server-side and are never exposed to the PWA.
 
 Point the domain's DNS A/AAAA record to the VM before starting Caddy. For a zero-cost setup, a free DuckDNS subdomain can be used instead of purchasing a domain.
 

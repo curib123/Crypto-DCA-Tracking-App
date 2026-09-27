@@ -1,9 +1,9 @@
 import { Controller, Get, Injectable, Req, UseGuards } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { Throttle } from "@nestjs/throttler";
 import { PrismaService } from "../../infrastructure/database/prisma.service";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { PortfolioService } from "../portfolio/portfolio";
+import { MistralProvider } from "./mistral.provider";
 
 type Insight = {
   id: string;
@@ -14,12 +14,15 @@ type Insight = {
 
 @Injectable()
 export class AiInsightsService {
-  private readonly cache = new Map<string, { expiresAt: number; value: any }>();
+  private readonly cache = new Map<
+    string,
+    { expiresAt: number; fingerprint: string; value: any }
+  >();
 
   constructor(
     private readonly portfolio: PortfolioService,
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
+    private readonly mistral: MistralProvider,
   ) {}
 
   private deterministic(summary: any, buyDates: Date[]): Insight[] {
@@ -77,12 +80,7 @@ export class AiInsightsService {
     return insights.slice(0, 4);
   }
 
-  private async aiNarrative(summary: any, insights: Insight[]) {
-    const url = String(this.config.get("AI_API_URL") || "").trim();
-    const model = String(this.config.get("AI_MODEL") || "").trim();
-    if (!url || !model) return null;
-
-    const key = String(this.config.get("AI_API_KEY") || "").trim();
+  private async mistralNarrative(summary: any, insights: Insight[]) {
     const context = {
       currency: summary.currency,
       totals: summary.totals,
@@ -97,44 +95,16 @@ export class AiInsightsService {
       deterministicObservations: insights.map(({ title, body }) => ({ title, body })),
     };
 
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(key ? { Authorization: `Bearer ${key}` } : {}),
-        },
-        body: JSON.stringify({
-          model,
-          temperature: 0.2,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are NextFi Insights. Explain the user's supplied portfolio analytics in plain language. Never predict prices, promise returns, or tell the user to buy, sell, or hold. Focus on concentration, DCA consistency, fees, data quality, and what the numbers mean. Keep the response under 140 words.",
-            },
-            {
-              role: "user",
-              content: JSON.stringify(context),
-            },
-          ],
-        }),
-        signal: AbortSignal.timeout(12_000),
-      });
-
-      if (!response.ok) return null;
-      const payload: any = await response.json();
-      const value = payload?.choices?.[0]?.message?.content;
-      return typeof value === "string" && value.trim() ? value.trim() : null;
-    } catch {
-      return null;
-    }
+    return this.mistral.complete({
+      temperature: 0.2,
+      maxTokens: 220,
+      system:
+        "You are NextFi Insights powered by Mistral. Explain only the supplied portfolio analytics in plain language. Never predict crypto prices, promise returns, or tell the user to buy, sell, or hold. Never invent missing portfolio data. Focus on concentration, DCA consistency, fees, data quality, and what the deterministic numbers mean. Keep the response concise, under 140 words.",
+      user: JSON.stringify(context),
+    });
   }
 
   async get(userId: string) {
-    const cached = this.cache.get(userId);
-    if (cached && cached.expiresAt > Date.now()) return cached.value;
-
     const [summary, buys] = await Promise.all([
       this.portfolio.summary(userId),
       this.prisma.transaction.findMany({
@@ -144,18 +114,50 @@ export class AiInsightsService {
       }),
     ]);
 
-    const insights = this.deterministic(summary, buys.map((row) => row.occurredAt));
-    const narrative = await this.aiNarrative(summary, insights);
+    const buyDates = buys.map((row) => row.occurredAt);
+    const insights = this.deterministic(summary, buyDates);
+    const fingerprint = JSON.stringify({
+      currency: summary.currency,
+      totals: summary.totals,
+      assets: summary.assets.map((asset: any) => ({
+        symbol: asset.symbol,
+        quantity: asset.quantity,
+        averageEntry: asset.averageEntry,
+        currentPrice: asset.currentPrice,
+        currentValue: asset.currentValue,
+        returnPct: asset.returnPct,
+        totalFees: asset.totalFees,
+        buyCount: asset.buyCount,
+      })),
+      buys: buyDates.map((date) => date.toISOString()),
+    });
+
+    const cached = this.cache.get(userId);
+    if (
+      cached &&
+      cached.expiresAt > Date.now() &&
+      cached.fingerprint === fingerprint
+    ) {
+      return cached.value;
+    }
+
+    const mistralResponse = await this.mistralNarrative(summary, insights);
     const value = {
       generatedAt: new Date().toISOString(),
-      mode: narrative ? "ai-assisted" : "analytics-only",
-      narrative,
+      mode: mistralResponse ? "ai-assisted" : "analytics-only",
+      provider: mistralResponse ? this.mistral.providerName : null,
+      model: mistralResponse?.model || null,
+      narrative: mistralResponse?.text || null,
       insights,
       disclaimer:
         "These observations describe your tracked data. They are not financial advice, price predictions, or trade instructions.",
     };
 
-    this.cache.set(userId, { expiresAt: Date.now() + 10 * 60 * 1000, value });
+    this.cache.set(userId, {
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      fingerprint,
+      value,
+    });
     return value;
   }
 }
