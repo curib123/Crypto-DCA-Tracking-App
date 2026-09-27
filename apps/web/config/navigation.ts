@@ -24,6 +24,10 @@ export const APP_NAVIGATION: NavigationItem[] = [
   { href: "/app/settings", label: "Settings", icon: "settings" },
 ];
 
+export const MOBILE_NAVIGATION: NavigationItem[] = APP_NAVIGATION.filter((item) =>
+  ["/app", "/app/transactions", "/app/market", "/app/insights"].includes(item.href),
+);
+
 export const CONTROL_NAVIGATION: NavigationItem[] = [
   { href: "/admin", label: "Overview", icon: "home" },
   { href: "/admin/users", label: "Users", icon: "users" },

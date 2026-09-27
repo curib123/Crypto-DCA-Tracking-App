@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell";
+import { DialogProvider } from "@/components/ui/dialog-provider";
 
 export const metadata: Metadata = {
   title: "Portfolio",
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <DialogProvider>
+      <AppShell>{children}</AppShell>
+    </DialogProvider>
+  );
 }

@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { APP_NAVIGATION, CONTROL_NAVIGATION } from "../config/navigation";
+import {
+  APP_NAVIGATION,
+  CONTROL_NAVIGATION,
+  MOBILE_NAVIGATION,
+} from "../config/navigation";
 
 test("presentation styles are split by responsibility", async () => {
   const globals = await readFile(
@@ -16,6 +20,7 @@ test("presentation styles are split by responsibility", async () => {
     "../styles/product.css",
     "../styles/admin.css",
     "../styles/responsive.css",
+    "../styles/mobile-app.css",
   ];
 
   for (const file of expected) {
@@ -47,6 +52,11 @@ test("customer and control-panel navigation are centralized", () => {
   );
 
   assert.deepEqual(
+    MOBILE_NAVIGATION.map((item) => item.href),
+    ["/app", "/app/transactions", "/app/market", "/app/insights"],
+  );
+
+  assert.deepEqual(
     CONTROL_NAVIGATION.map((item) => item.href),
     [
       "/admin",
@@ -67,16 +77,37 @@ test("customer and control-panel navigation are centralized", () => {
   );
 });
 
-test("mobile PWA navigation exposes all five primary destinations", async () => {
-  const responsive = await readFile(
-    new URL("../styles/responsive.css", import.meta.url),
+test("mobile app shell uses four destinations plus a central add action", async () => {
+  const mobileStyles = await readFile(
+    new URL("../styles/mobile-app.css", import.meta.url),
+    "utf8",
+  );
+  const appShell = await readFile(
+    new URL("../components/app-shell.tsx", import.meta.url),
     "utf8",
   );
 
   assert.equal(
-    responsive.includes(
-      "grid-template-columns: repeat(5, minmax(0, 1fr));",
-    ),
+    mobileStyles.includes("grid-template-columns: 1fr 1fr 64px 1fr 1fr;"),
     true,
   );
+  assert.equal(appShell.includes('href="/app/transactions?new=1"'), true);
+  assert.equal(appShell.includes("app-drawer"), true);
+});
+
+test("customer mutations use shared application dialogs", async () => {
+  const transactions = await readFile(
+    new URL("../components/transactions-client.tsx", import.meta.url),
+    "utf8",
+  );
+  const settings = await readFile(
+    new URL("../components/settings-client.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.equal(transactions.includes("AppDialog"), true);
+  assert.equal(transactions.includes("useDialog"), true);
+  assert.equal(settings.includes("AppDialog"), true);
+  assert.equal(settings.includes("useDialog"), true);
+  assert.equal(transactions.includes('confirm("Delete this transaction?'), false);
 });
