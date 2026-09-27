@@ -18,7 +18,7 @@ type CachedMarket = {
 @Injectable()
 export class MarketService {
   private readonly cache = new Map<string, CachedMarket>();
-  private readonly ttlMs = 60_000;
+  private readonly ttlMs = 15 * 60_000;
 
   async getPrices(symbols: string[], currency: string) {
     const cleanSymbols = [...new Set(symbols.map((value) => value.toUpperCase()))].filter(
@@ -29,14 +29,21 @@ export class MarketService {
 
     const requestedCurrency = currency.toLowerCase();
     const vs = ["usdt", "usdc"].includes(requestedCurrency) ? "usd" : requestedCurrency;
-    const cacheKey = `${cleanSymbols.sort().join(",")}:${requestedCurrency}`;
+    const cacheKey = requestedCurrency;
     const cached = this.cache.get(cacheKey);
 
     if (cached && cached.expiresAt > Date.now()) {
-      return cached.data;
+      return Object.fromEntries(
+        cleanSymbols
+          .filter((symbol) => cached.data[symbol])
+          .map((symbol) => [symbol, cached.data[symbol]]),
+      );
     }
 
-    const ids = cleanSymbols.map((symbol) => ASSETS[symbol]).join(",");
+    // Fetch all supported assets in one credit so different portfolios can
+    // share the same cached market snapshot for this display currency.
+    const allSymbols = Object.keys(ASSETS);
+    const ids = allSymbols.map((symbol) => ASSETS[symbol]).join(",");
     const endpoint = new URL("https://api.coingecko.com/api/v3/simple/price");
 
     endpoint.searchParams.set("ids", ids);
@@ -61,7 +68,7 @@ export class MarketService {
     const data = (await response.json()) as Record<string, Record<string, number>>;
 
     const normalized = Object.fromEntries(
-      cleanSymbols.map((symbol) => {
+      allSymbols.map((symbol) => {
         const row = data[ASSETS[symbol]] || {};
         return [
           symbol,
@@ -81,7 +88,11 @@ export class MarketService {
       data: normalized,
     });
 
-    return normalized;
+    return Object.fromEntries(
+      cleanSymbols
+        .filter((symbol) => normalized[symbol])
+        .map((symbol) => [symbol, normalized[symbol]]),
+    );
   }
 }
 
