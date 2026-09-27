@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateAssetPosition } from "./index";
+import { calculateAssetPosition, validateAssetLedger } from "./index";
 
 test("weighted average uses contribution and quantity", () => {
   const result = calculateAssetPosition([
@@ -52,4 +52,22 @@ test("positive adjustment adds corrected quantity and historical basis without a
   assert.equal(result.remainingCostBasis, 50);
   assert.equal(result.averageEntry, 100);
   assert.equal(result.buyCount, 0);
+});
+
+
+test("backdated sell is invalid when it makes a later sell exceed holdings", () => {
+  const validation = validateAssetLedger([
+    { type: "BUY", quantity: 1, amountBase: 100, feeBase: 0, occurredAt: "2026-01-01" },
+    { type: "SELL", quantity: 0.5, amountBase: 60, feeBase: 0, occurredAt: "2026-01-02" },
+    { type: "SELL", quantity: 0.8, amountBase: 100, feeBase: 0, occurredAt: "2026-01-03" },
+  ]);
+  assert.equal(validation.valid, false);
+});
+
+test("deleting an independent sell still leaves a valid ledger", () => {
+  const validation = validateAssetLedger([
+    { type: "BUY", quantity: 1, amountBase: 100, feeBase: 0, occurredAt: "2026-01-01" },
+    { type: "SELL", quantity: 0.5, amountBase: 60, feeBase: 0, occurredAt: "2026-01-03" },
+  ]);
+  assert.equal(validation.valid, true);
 });
