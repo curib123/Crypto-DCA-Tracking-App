@@ -68,8 +68,8 @@ jobs:
       - name: Test PWA/offline behavior
         run: pnpm --filter @crypto-dca/web test
 
-      - name: Typecheck
-        run: pnpm --filter @crypto-dca/web typecheck
+      - name: Typecheck workspaces
+        run: pnpm typecheck
 
-      - name: Build production Next.js app
-        run: pnpm --filter @crypto-dca/web build
+      - name: Build production app
+        run: pnpm build
