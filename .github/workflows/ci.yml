@@ -8,10 +8,32 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: crypto_dca_ci
+          POSTGRES_USER: crypto_dca_ci
+          POSTGRES_PASSWORD: crypto_dca_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U crypto_dca_ci -d crypto_dca_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
-      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      DATABASE_URL: postgresql://crypto_dca_ci:crypto_dca_ci_password@localhost:5432/crypto_dca_ci?schema=public
+      JWT_SECRET: ci-only-secret-at-least-32-characters-long
+      CORS_ORIGIN: http://localhost:3000
       NEXT_PUBLIC_API_URL: http://localhost:4000/api
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      APP_DOMAIN: dca-ci.example.com
+      POSTGRES_DB: crypto_dca_ci
+      POSTGRES_USER: crypto_dca_ci
+      POSTGRES_PASSWORD: crypto_dca_ci_password
 
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +53,11 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
+      - name: Validate Prisma schema and migrations
+        run: |
+          pnpm --filter @crypto-dca/api exec prisma validate
+          pnpm --filter @crypto-dca/api prisma:deploy
+
       - name: Test calculation engine
         run: pnpm --filter @crypto-dca/core test
 
@@ -39,3 +66,66 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Validate Docker Compose files
+        run: |
+          docker compose config --quiet
+          docker compose -f docker-compose.prod.yml config --quiet
+
+      - name: API runtime smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NODE_ENV=test PORT=4000 pnpm --filter @crypto-dca/api start >/tmp/crypto-dca-api.log 2>&1 &
+          API_PID=$!
+          trap 'kill "$API_PID" 2>/dev/null || true; cat /tmp/crypto-dca-api.log' EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:4000/api/health >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          curl --fail --silent http://localhost:4000/api/health | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              const j=JSON.parse(s);
+              if(j.status!=="ok" || j.database!=="ok") process.exit(1);
+            });
+          '
+
+          curl --fail --silent             -c /tmp/crypto-dca-cookies.txt             -H 'Content-Type: application/json'             -d '{"email":"ci@example.com","password":"ci-password-123","baseCurrency":"USD"}'             http://localhost:4000/api/auth/register >/tmp/register.json
+
+          BUY_PAYLOAD='{"clientReference":"11111111-1111-4111-8111-111111111111","assetSymbol":"BTC","type":"BUY","quantity":0.001,"unitPrice":100000,"amountSpent":100,"quoteCurrency":"USD","feeBase":0,"occurredAt":"2026-01-01T00:00:00.000Z"}'
+
+          curl --fail --silent             -b /tmp/crypto-dca-cookies.txt             -H 'Content-Type: application/json'             -d "$BUY_PAYLOAD"             http://localhost:4000/api/transactions >/tmp/buy.json
+
+          # Retry the same client reference: it must remain one ledger row.
+          curl --fail --silent             -b /tmp/crypto-dca-cookies.txt             -H 'Content-Type: application/json'             -d "$BUY_PAYLOAD"             http://localhost:4000/api/transactions >/tmp/buy-retry.json
+
+          curl --fail --silent             -b /tmp/crypto-dca-cookies.txt             http://localhost:4000/api/transactions | node -e '
+              let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+                const rows=JSON.parse(s);
+                if(rows.length!==1) throw new Error("Idempotency failed");
+                if(Number(rows[0].quantity)!==0.001) throw new Error("Quantity mismatch");
+              });
+            '
+
+          curl --fail --silent             -b /tmp/crypto-dca-cookies.txt             http://localhost:4000/api/portfolio/summary | node -e '
+              let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+                const p=JSON.parse(s);
+                if(p.currency!=="USD") throw new Error("Base currency mismatch");
+                if(p.assets.length!==1 || p.assets[0].symbol!=="BTC") throw new Error("Position missing");
+                if(Math.abs(p.assets[0].quantity-0.001)>1e-12) throw new Error("Portfolio quantity mismatch");
+                if(Math.abs(p.totals.invested-100)>1e-9) throw new Error("Invested amount mismatch");
+              });
+            '
+
+          # Overselling must be rejected.
+          STATUS=$(curl --silent --output /tmp/oversell.json --write-out '%{http_code}'             -b /tmp/crypto-dca-cookies.txt             -H 'Content-Type: application/json'             -d '{"clientReference":"22222222-2222-4222-8222-222222222222","assetSymbol":"BTC","type":"SELL","quantity":0.01,"unitPrice":100000,"amountSpent":1000,"quoteCurrency":"USD","feeBase":0,"occurredAt":"2026-01-02T00:00:00.000Z"}'             http://localhost:4000/api/transactions)
+          test "$STATUS" = "400"
+
+          # Cross-currency ledger records require an explicit historical FX rate.
+          STATUS=$(curl --silent --output /tmp/fx.json --write-out '%{http_code}'             -b /tmp/crypto-dca-cookies.txt             -H 'Content-Type: application/json'             -d '{"clientReference":"33333333-3333-4333-8333-333333333333","assetSymbol":"ETH","type":"BUY","quantity":0.01,"unitPrice":200000,"amountSpent":2000,"quoteCurrency":"PHP","feeBase":0,"occurredAt":"2026-01-02T00:00:00.000Z"}'             http://localhost:4000/api/transactions)
+          test "$STATUS" = "400"
