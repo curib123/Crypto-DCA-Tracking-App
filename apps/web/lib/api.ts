@@ -1,27 +1,21 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
-export function getToken() {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem("crypto-dca-token") || "";
-}
-
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
-  authenticated = true,
+  _authenticated = true,
 ): Promise<T> {
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
 
-  if (authenticated) {
-    const token = getToken();
-    if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (options.body !== undefined && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
+    credentials: "include",
     cache: "no-store",
   });
 
