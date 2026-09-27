@@ -13,6 +13,8 @@ type Insight = {
 type Payload = {
   generatedAt: string;
   mode: "ai-assisted" | "analytics-only";
+  provider: "mistral" | null;
+  model: string | null;
   narrative: string | null;
   insights: Insight[];
   disclaimer: string;
@@ -60,12 +62,14 @@ export function InsightsClient() {
           <section className="panel insight-summary">
             <div className="panel-title">
               <div>
-                <span className="eyebrow">Mode · {data.mode === "ai-assisted" ? "AI assisted" : "Analytics only"}</span>
+                <span className="eyebrow">
+                  Mode · {data.mode === "ai-assisted" ? `Mistral · ${data.model || "configured model"}` : "Analytics only"}
+                </span>
                 <h2>Portfolio summary</h2>
               </div>
               <span className="status-pill">{new Date(data.generatedAt).toLocaleString()}</span>
             </div>
-            <p>{data.narrative || "No external AI provider is configured, so NextFi is showing deterministic analytics-only observations."}</p>
+            <p>{data.narrative || "Mistral is not configured or is temporarily unavailable, so NextFi is showing deterministic analytics-only observations."}</p>
           </section>
 
           <section className="insight-grid">
