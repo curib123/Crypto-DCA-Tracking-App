@@ -79,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           port="${ORACLE_SSH_PORT:-22}"
-          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'bash -s' < scripts/oracle/bootstrap-docker.sh
+          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'bash -s' < scripts/deploy/bootstrap-docker.sh
 
       - name: Upload tested production source
         if: steps.config.outputs.ready == 'true'
@@ -110,7 +110,7 @@ jobs:
           set -euo pipefail
           port="${ORACLE_SSH_PORT:-22}"
 
-          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'cd "$HOME/nextfi" && bash scripts/oracle/remote-deploy.sh'
+          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'cd "$HOME/nextfi" && bash scripts/deploy/remote-deploy.sh'
 
       - name: Deployment not configured
         if: steps.config.outputs.ready != 'true'

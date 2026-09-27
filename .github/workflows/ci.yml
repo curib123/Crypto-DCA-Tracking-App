@@ -84,6 +84,12 @@ jobs:
           docker compose config --quiet
           docker compose -f docker-compose.prod.yml config --quiet
 
+      - name: Validate deployment scripts
+        run: |
+          bash -n scripts/deploy/bootstrap-docker.sh
+          bash -n scripts/deploy/remote-deploy.sh
+          bash -n scripts/aws/prepare-t4g.sh
+
       - name: API runtime smoke test
         shell: bash
         run: |
