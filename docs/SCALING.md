@@ -215,7 +215,7 @@ The transaction ledger remains the source of truth regardless of provider availa
 
 Rate limiting is performed inside NestJS without Redis.
 
-Authenticated requests are tracked using a SHA-256-derived identifier from the HttpOnly app session cookie rather than only by public IP.
+Authenticated requests are tracked by the verified app JWT subject (the internal user ID) rather than only by public IP. Invalid or expired session cookies fall back to IP tracking.
 
 This matters for mobile users because hundreds of legitimate devices can share a carrier-grade NAT address.
 
@@ -223,7 +223,7 @@ Fallback tracking for unauthenticated requests uses client IP.
 
 Current policy:
 
-- global API: 120 requests/minute per session/IP tracker
+- global API: 120 requests/minute per verified user/IP fallback tracker
 - Google sign-in: 30 requests/minute per unauthenticated IP
 - market prices: 30 requests/minute per authenticated session
 
