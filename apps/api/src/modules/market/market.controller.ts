@@ -1,8 +1,10 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Query, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { MarketService } from "./market.service";
 
 @Controller("market")
+@UseGuards(JwtAuthGuard)
 export class MarketController {
   constructor(private readonly market: MarketService) {}
 
