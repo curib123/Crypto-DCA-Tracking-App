@@ -13,7 +13,7 @@ export class AuthController {
   ) {}
 
   @Post("google")
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   async google(@Body() dto: GoogleSignInDto, @Res({ passthrough: true }) response: any) {
     const result = await this.auth.signInWithGoogle(dto.credential);
     this.session.setCookie(response, result.token);
