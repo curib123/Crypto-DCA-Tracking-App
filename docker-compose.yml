@@ -28,7 +28,6 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-replace-with-google-web-client-id.apps.googleusercontent.com}
       DEFAULT_BASE_CURRENCY: ${DEFAULT_BASE_CURRENCY:-USD}
       COINGECKO_DEMO_API_KEY: ${COINGECKO_DEMO_API_KEY:-}
-      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       CONTROL_PANEL_USERNAME: ${CONTROL_PANEL_USERNAME:-admin}
       CONTROL_PANEL_PASSWORD: ${CONTROL_PANEL_PASSWORD:-pass}
       CONTROL_PANEL_JWT_SECRET: ${CONTROL_PANEL_JWT_SECRET:-dev-only-control-panel-secret-change-me}
