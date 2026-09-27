@@ -1,0 +1,116 @@
+name: Deploy to Oracle Free
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [master]
+
+concurrency:
+  group: nextfi-oracle-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'master')
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+      ORACLE_USER: ${{ secrets.ORACLE_USER }}
+      ORACLE_SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
+      ORACLE_SSH_PORT: ${{ secrets.ORACLE_SSH_PORT }}
+      ORACLE_ENV_FILE: ${{ secrets.ORACLE_ENV_FILE }}
+
+    steps:
+      - name: Check deployment configuration
+        id: config
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for key in ORACLE_HOST ORACLE_USER ORACLE_SSH_PRIVATE_KEY ORACLE_ENV_FILE; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "::warning::$key is not configured. Oracle deployment will be skipped."
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout production source
+        if: steps.config.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Configure SSH
+        if: steps.config.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s
+' "$ORACLE_SSH_PRIVATE_KEY" > ~/.ssh/oracle_key
+          chmod 600 ~/.ssh/oracle_key
+
+          port="${ORACLE_SSH_PORT:-22}"
+          ssh-keyscan -p "$port" -H "$ORACLE_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Bootstrap Docker on Oracle VM
+        if: steps.config.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          port="${ORACLE_SSH_PORT:-22}"
+          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'bash -s' < scripts/oracle/bootstrap-docker.sh
+
+      - name: Upload production source
+        if: steps.config.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          port="${ORACLE_SSH_PORT:-22}"
+
+          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'mkdir -p "$HOME/nextfi"'
+
+          tar             --exclude='.git'             --exclude='node_modules'             --exclude='.next'             --exclude='dist'             --exclude='.env'             -czf - . |
+          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'tar -xzf - -C "$HOME/nextfi"'
+
+      - name: Install production environment
+        if: steps.config.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          port="${ORACLE_SSH_PORT:-22}"
+
+          printf '%s
+' "$ORACLE_ENV_FILE" |
+          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'umask 077; cat > "$HOME/nextfi/.env"; chmod 600 "$HOME/nextfi/.env"'
+
+      - name: Deploy NextFi
+        if: steps.config.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          port="${ORACLE_SSH_PORT:-22}"
+
+          ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'cd "$HOME/nextfi" && bash scripts/oracle/remote-deploy.sh'
+
+      - name: Deployment not configured
+        if: steps.config.outputs.ready != 'true'
+        run: |
+          echo "Oracle deployment workflow is ready, but repository production secrets are not configured yet."
