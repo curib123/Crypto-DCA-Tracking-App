@@ -7,7 +7,7 @@ A mobile-first Progressive Web App for tracking real crypto DCA contributions, w
 - Modern black-and-white SaaS landing page
 - Installable PWA manifest + service worker
 - Google-friendly metadata, canonical URL, robots, sitemap, FAQ JSON-LD, and SoftwareApplication JSON-LD
-- Email/password registration and login
+- Google Identity Services sign-in only; no application password database
 - HttpOnly-cookie JWT-protected app routes
 - PostgreSQL transaction ledger
 - Weighted DCA cost-basis engine
@@ -16,19 +16,29 @@ A mobile-first Progressive Web App for tracking real crypto DCA contributions, w
 - Average entry and break-even
 - Realized and unrealized P/L
 - Multi-currency transaction fields with FX-to-base rate
-- CoinGecko live market prices with last-entry fallback for portfolio continuity
+- Shared CoinGecko market snapshot with request coalescing, stale-while-revalidate, circuit breaking, and last-entry fallback
 - IndexedDB offline transaction queue
 - Responsive desktop/mobile SaaS dashboard
 - Dockerized monorepo
 - Oracle Cloud production Compose stack with automatic HTTPS through Caddy
-- CI build/typecheck/calculation tests
+- CI calculation, offline, scaling, typecheck, migration, Docker, and live API smoke tests
 
 ## Architecture
 
 ```
 apps/
   web/         Next.js 16 PWA + landing page + authenticated UI
-  api/         NestJS API + Prisma/PostgreSQL
+  api/
+    src/
+      common/
+      infrastructure/
+        database/
+        rate-limit/
+      modules/
+        auth/
+        market/
+        portfolio/
+        transactions/
 
 packages/
   core/        Pure cost-basis and DCA calculation engine
@@ -36,6 +46,9 @@ packages/
 infrastructure/
   Caddyfile
   oracle/
+
+docs/
+  SCALING.md
 ```
 
 The main calculation path is:
@@ -53,6 +66,10 @@ Current value / unrealized P&L
 ```
 
 Controllers do not own financial calculation logic. The reusable weighted-cost engine lives in `packages/core`.
+
+The NestJS app is separated into feature modules and infrastructure adapters. Market data is accessed through a provider port so CoinGecko can be replaced without changing portfolio logic.
+
+See [docs/SCALING.md](docs/SCALING.md) for the 1,000-user design, quota math, rate limits, and horizontal-scaling boundary.
 
 ## Requirements
 
@@ -84,14 +101,7 @@ pnpm db:generate
 pnpm db:seed
 ```
 
-Demo account:
-
-```
-demo@example.com
-demo12345
-```
-
-Do not use the demo password in production.
+The seed creates example ledger data only. Authentication remains Google-only; there is no demo password.
 
 ## Run without Docker
 
@@ -104,6 +114,28 @@ pnpm db:generate
 pnpm --filter @crypto-dca/api prisma:push
 pnpm dev
 ```
+
+## Google Sign-In configuration
+
+Authentication uses Google Identity Services in the browser and Google's official Node.js auth library on the API.
+
+Create one **Web application** OAuth client in Google Auth Platform and configure authorized JavaScript origins such as:
+
+```
+http://localhost:3000
+https://your-production-domain.example
+```
+
+Set the same Web Client ID in both server and public web configuration:
+
+```
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+```
+
+The backend verifies every Google ID token and persists Google's stable `sub` claim as the account identity. The app then creates its own HttpOnly session cookie.
+
+This selected ID-token flow does **not** require a Google client secret in the repository or Docker environment.
 
 ## Multi-currency model
 
@@ -230,6 +262,9 @@ POSTGRES_DB=crypto_dca
 POSTGRES_USER=crypto_dca
 POSTGRES_PASSWORD=<strong-random-password>
 JWT_SECRET=<long-random-secret-at-least-32-characters>
+GOOGLE_CLIENT_ID=<google-web-client-id.apps.googleusercontent.com>
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=<google-web-client-id.apps.googleusercontent.com>
+DEFAULT_BASE_CURRENCY=USD
 ```
 
 Optional but recommended for live market data:
@@ -261,9 +296,9 @@ The production API runs the checked-in Prisma migrations before starting.
 
 ## Security baseline
 
-- Passwords are hashed with bcrypt
 - Production refuses to start with a missing/short JWT secret
-- Authentication endpoints and the API have in-memory rate limiting
+- Google sign-in and API routes have in-memory rate limiting; authenticated limits are keyed by verified app user identity, with IP fallback
+- Google ID tokens are verified server-side and are not persisted as application sessions
 - JWT sessions are stored in HttpOnly, SameSite cookies rather than browser localStorage
 - JWT-protected portfolio/transaction routes
 - DTO validation and unknown-field rejection
@@ -274,11 +309,11 @@ The production API runs the checked-in Prisma migrations before starting.
 - No wallet seed phrase or private-key collection
 - No crypto custody or trade execution
 
-Before a public commercial launch, add refresh-token rotation, email verification, password reset, rate-limit persistence, 2FA, audit/event storage, encrypted integration credentials, and a formal privacy/terms review.
+Before a larger commercial launch, add formal privacy/terms review, centralized audit/event storage, monitored backups, observability, and—if multiple API replicas are introduced—a shared rate-limit/cache layer.
 
 ## Market data
 
-The API uses CoinGecko's free **Demo/public** simple-price endpoint. No paid market-data plan is required. If `COINGECKO_DEMO_API_KEY` is configured, the API sends it only from the backend; otherwise it attempts public/keyless access. A 15-minute shared in-memory snapshot reduces calls, and portfolio calculations fall back to the last recorded entry price if market data is unavailable. Supported assets:
+The API uses CoinGecko's free **Demo/public** simple-price endpoint. Users never call CoinGecko directly. One backend request retrieves all supported assets and display currencies, then a 15-minute shared snapshot serves all users. Concurrent refreshes coalesce to one provider request, expired data can be served stale while one refresh runs, and repeated provider failures open a temporary circuit breaker. No paid market-data plan is required for the current one-replica target. If `COINGECKO_DEMO_API_KEY` is configured, it stays server-side. Supported assets:
 
 - BTC
 - ETH
