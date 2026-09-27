@@ -95,6 +95,19 @@ export async function clearActiveUser() {
   await deleteCache("active-user");
 }
 
+export async function markLogoutPending() {
+  return putCache("logout-pending", true);
+}
+
+export async function isLogoutPending() {
+  const cached = await readCache<boolean>("logout-pending");
+  return cached?.value === true;
+}
+
+export async function clearLogoutPending() {
+  await deleteCache("logout-pending");
+}
+
 function userKey(userId: string, resource: string) {
   return `user:${userId}:${resource}`;
 }
