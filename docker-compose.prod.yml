@@ -26,7 +26,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       JWT_SECRET: ${JWT_SECRET}
       CORS_ORIGIN: https://${APP_DOMAIN}
-      COINGECKO_API_KEY: ${COINGECKO_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
