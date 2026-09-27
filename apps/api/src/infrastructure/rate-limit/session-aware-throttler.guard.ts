@@ -15,15 +15,16 @@ function readCookie(cookieHeader: string, name: string) {
 
 @Injectable()
 export class SessionAwareThrottlerGuard extends ThrottlerGuard {
+  private readonly jwt = new JwtService({
+    secret: process.env.JWT_SECRET || "dev-only-change-me",
+  });
+
   protected async getTracker(req: Record<string, any>): Promise<string> {
     const token = readCookie(String(req.headers?.cookie || ""), SESSION_COOKIE);
 
     if (token) {
       try {
-        const jwt = new JwtService({
-          secret: process.env.JWT_SECRET || "dev-only-change-me",
-        });
-        const payload = jwt.verify(token);
+        const payload = this.jwt.verify(token);
 
         if (payload?.sub) {
           return `user:${payload.sub}`;
