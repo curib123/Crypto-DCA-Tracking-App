@@ -13,6 +13,29 @@ fi
 
 source /etc/os-release
 
+install_compose_plugin() {
+  local version="${DOCKER_COMPOSE_VERSION:-v5.5.1}"
+  local arch
+  arch="$(uname -m)"
+
+  case "$arch" in
+    x86_64|aarch64)
+      ;;
+    arm64)
+      arch="aarch64"
+      ;;
+    *)
+      echo "Unsupported architecture for Docker Compose: $arch" >&2
+      exit 1
+      ;;
+  esac
+
+  sudo mkdir -p /usr/local/lib/docker/cli-plugins
+  sudo curl -fsSL     "https://github.com/docker/compose/releases/download/${version}/docker-compose-linux-${arch}"     -o /usr/local/lib/docker/cli-plugins/docker-compose
+  sudo chown root:root /usr/local/lib/docker/cli-plugins/docker-compose
+  sudo chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
+}
+
 case "${ID:-}" in
   ubuntu|debian)
     sudo apt-get update
@@ -34,9 +57,20 @@ case "${ID:-}" in
     sudo systemctl enable --now docker
     sudo usermod -aG docker "$USER" || true
     ;;
+
+  amzn)
+    sudo dnf install -y docker curl
+    sudo systemctl enable --now docker
+    sudo usermod -aG docker "$USER" || true
+
+    if ! sudo docker compose version >/dev/null 2>&1; then
+      install_compose_plugin
+    fi
+    ;;
+
   *)
     echo "Unsupported OS for automatic Docker bootstrap: ${ID:-unknown}" >&2
-    echo "Use Ubuntu/Debian or install Docker Engine + Docker Compose manually." >&2
+    echo "Supported: Ubuntu, Debian, Amazon Linux 2023." >&2
     exit 1
     ;;
 esac
