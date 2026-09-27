@@ -25,6 +25,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-crypto_dca}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-crypto_dca}?schema=public
       JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
       CORS_ORIGIN: http://localhost:3000
+      COINGECKO_DEMO_API_KEY: ${COINGECKO_DEMO_API_KEY:-}
     ports:
       - "4000:4000"
     depends_on:
