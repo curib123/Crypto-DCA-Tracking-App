@@ -1,5 +1,6 @@
 import { ConflictException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { UserRole } from "@prisma/client";
 import { PrismaService } from "../../infrastructure/database/prisma.service";
 import { isSupportedCurrency } from "../../common/currency.constants";
 import { GoogleIdentityService } from "./google-identity.service";
@@ -8,6 +9,7 @@ import { SessionService } from "./session.service";
 @Injectable()
 export class AuthService {
   private readonly defaultBaseCurrency: string;
+  private readonly bootstrapAdmins: Set<string>;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -19,10 +21,17 @@ export class AuthService {
     this.defaultBaseCurrency = isSupportedCurrency(configuredCurrency)
       ? configuredCurrency
       : "USD";
+    this.bootstrapAdmins = new Set(
+      String(config.get("ADMIN_EMAILS") || "")
+        .split(",")
+        .map((value) => value.trim().toLowerCase())
+        .filter(Boolean),
+    );
   }
 
   async signInWithGoogle(credential: string) {
     const identity = await this.googleIdentity.verifyCredential(credential);
+    const bootstrapAdmin = this.bootstrapAdmins.has(identity.email.toLowerCase());
 
     let user = await this.prisma.user.findUnique({
       where: { googleSubject: identity.subject },
@@ -51,6 +60,8 @@ export class AuthService {
             googleSubject: identity.subject,
             name: identity.name,
             pictureUrl: identity.pictureUrl,
+            lastLoginAt: new Date(),
+            ...(bootstrapAdmin ? { role: UserRole.ADMIN } : {}),
           },
         });
       } else {
@@ -61,6 +72,8 @@ export class AuthService {
             name: identity.name,
             pictureUrl: identity.pictureUrl,
             baseCurrency: this.defaultBaseCurrency,
+            role: bootstrapAdmin ? UserRole.ADMIN : UserRole.USER,
+            lastLoginAt: new Date(),
           },
         });
       }
@@ -81,6 +94,8 @@ export class AuthService {
           email: identity.email,
           name: identity.name,
           pictureUrl: identity.pictureUrl,
+          lastLoginAt: new Date(),
+          ...(bootstrapAdmin ? { role: UserRole.ADMIN } : {}),
         },
       });
     }
@@ -93,6 +108,9 @@ export class AuthService {
         name: user.name,
         pictureUrl: user.pictureUrl,
         baseCurrency: user.baseCurrency,
+        role: user.role,
+        status: user.status,
+        themePreference: user.themePreference,
       },
     };
   }
@@ -106,6 +124,9 @@ export class AuthService {
         name: true,
         pictureUrl: true,
         baseCurrency: true,
+        role: true,
+        status: true,
+        themePreference: true,
       },
     });
   }
