@@ -7,6 +7,7 @@ export type NavIconName =
   | "settings"
   | "profile"
   | "plus"
+  | "calendar"
   | "users"
   | "ads"
   | "content"
@@ -23,6 +24,7 @@ export const APP_NAVIGATION: NavigationItem[] = [
   { href: "/app", label: "Overview", mobileLabel: "Home", icon: "home" },
   { href: "/app/portfolio", label: "Portfolio", icon: "portfolio" },
   { href: "/app/transactions", label: "Activity", icon: "ledger" },
+  { href: "/app/dca-plans", label: "DCA plans", icon: "calendar" },
   { href: "/app/market", label: "Market", icon: "market" },
   { href: "/app/insights", label: "AI Insights", mobileLabel: "Insights", icon: "insights" },
   { href: "/app/settings", label: "Profile & settings", mobileLabel: "Profile", icon: "profile" },
