@@ -44,10 +44,12 @@ model Transaction {
   exchange       String?
   wallet         String?
   notes          String?
+  clientReference String?
   occurredAt     DateTime
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   @@index([userId, occurredAt])
   @@index([userId, assetSymbol])
+  @@unique([userId, clientReference])
 }
