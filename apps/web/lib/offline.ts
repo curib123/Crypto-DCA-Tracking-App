@@ -195,7 +195,20 @@ export async function pendingTransactions(
     const request = tx.objectStore(PENDING_STORE).getAll();
     request.onsuccess = () => {
       const all = request.result as Record<string, unknown>[];
-      resolve(userId ? all.filter((row) => row._userId === userId) : all);
+      const scoped = userId ? all.filter((row) => row._userId === userId) : all;
+
+      scoped.sort((a, b) => {
+        const occurredA = new Date(String(a.occurredAt || a._queuedAt || 0)).getTime();
+        const occurredB = new Date(String(b.occurredAt || b._queuedAt || 0)).getTime();
+
+        if (occurredA !== occurredB) return occurredA - occurredB;
+
+        const queuedA = new Date(String(a._queuedAt || 0)).getTime();
+        const queuedB = new Date(String(b._queuedAt || 0)).getTime();
+        return queuedA - queuedB;
+      });
+
+      resolve(scoped);
     };
     request.onerror = () => reject(request.error);
   });
