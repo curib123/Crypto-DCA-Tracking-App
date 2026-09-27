@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { setActiveUser } from "@/lib/offline";
 
 type AuthResponse = {
   user: { id: string; email: string; baseCurrency: string };
@@ -36,7 +37,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         false,
       );
 
-      void result.user;
+      await setActiveUser(result.user);
       router.push("/app");
       router.refresh();
     } catch (err) {
