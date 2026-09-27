@@ -9,6 +9,7 @@ type PriceRow = {
   price: number;
   change24h: number;
   currency: string;
+  lastUpdatedAt?: number;
 };
 
 type MarketSnapshot = {
@@ -31,9 +32,18 @@ export function MarketClient() {
       const cached = await getCachedMarket<MarketSnapshot>(currency);
 
       if (cached && mounted) {
-        setRows(Object.values(cached.value.prices || {}));
+        const cachedRows = Object.values(cached.value.prices || {});
+        const providerTimestamp = Math.max(
+          0,
+          ...cachedRows.map((row) => Number(row.lastUpdatedAt || 0)),
+        );
+        setRows(cachedRows);
         setSource(cached.value.source || "Cached market data");
-        setUpdatedAt(cached.value.fetchedAt || cached.updatedAt);
+        setUpdatedAt(
+          providerTimestamp > 0
+            ? new Date(providerTimestamp * 1000).toISOString()
+            : cached.value.fetchedAt || cached.updatedAt,
+        );
         setOffline(!navigator.onLine);
       }
 
@@ -68,9 +78,17 @@ export function MarketClient() {
         await cacheMarket(currency, data);
 
         if (mounted) {
+          const providerTimestamp = Math.max(
+            0,
+            ...freshRows.map((row) => Number(row.lastUpdatedAt || 0)),
+          );
           setRows(freshRows);
           setSource(data.source || "Unknown");
-          setUpdatedAt(data.fetchedAt || new Date().toISOString());
+          setUpdatedAt(
+            providerTimestamp > 0
+              ? new Date(providerTimestamp * 1000).toISOString()
+              : data.fetchedAt || new Date().toISOString(),
+          );
           setOffline(false);
         }
       } catch {
