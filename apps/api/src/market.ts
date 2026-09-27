@@ -44,13 +44,15 @@ export class MarketService {
     endpoint.searchParams.set("include_24hr_change", "true");
     endpoint.searchParams.set("include_last_updated_at", "true");
 
-    // Deliberately uses CoinGecko's Demo/Keyless endpoint so the app has
-    // no required paid market-data subscription.
+    // The optional Demo key is free ($0 plan). Without it, the app attempts
+    // CoinGecko's public/keyless access and gracefully falls back if unavailable.
+    const demoKey = process.env.COINGECKO_DEMO_API_KEY;
     const response = await fetch(endpoint, {
       signal: AbortSignal.timeout(5000),
       headers: {
         "accept": "application/json",
         "user-agent": "Crypto-DCA-Tracking-App/1.0",
+        ...(demoKey ? { "x-cg-demo-api-key": demoKey } : {}),
       },
     });
 
@@ -94,7 +96,7 @@ export class MarketController {
   ) {
     try {
       return {
-        source: "CoinGecko Demo/Keyless",
+        source: "CoinGecko",
         prices: await this.market.getPrices(symbols.split(","), currency),
         fetchedAt: new Date().toISOString(),
       };
