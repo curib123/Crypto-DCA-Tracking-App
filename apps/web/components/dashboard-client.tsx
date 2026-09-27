@@ -6,6 +6,7 @@ import {
   cacheUserResource,
   getActiveUser,
   getCachedUserResource,
+  pendingTransactions,
 } from "@/lib/offline";
 
 type Asset = {
@@ -45,6 +46,7 @@ export function DashboardClient() {
   const [error, setError] = useState("");
   const [offline, setOffline] = useState(false);
   const [cachedAt, setCachedAt] = useState<string | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -53,7 +55,11 @@ export function DashboardClient() {
       const activeUser = await getActiveUser();
 
       if (activeUser) {
-        const cached = await getCachedUserResource<Summary>(activeUser.id, "portfolio");
+        const [cached, queued] = await Promise.all([
+          getCachedUserResource<Summary>(activeUser.id, "portfolio"),
+          pendingTransactions(activeUser.id),
+        ]);
+        setPendingCount(queued.length);
         if (cached && mounted) {
           setSummary(cached.value);
           setCachedAt(cached.updatedAt);
@@ -133,6 +139,11 @@ export function DashboardClient() {
           {offline && (
             <span className="status-pill">
               Offline · cached {cachedAt ? new Date(cachedAt).toLocaleString() : "previously"}
+            </span>
+          )}
+          {pendingCount > 0 && (
+            <span className="status-pill">
+              {pendingCount} pending · totals update after sync
             </span>
           )}
           <span className="status-pill">Base currency · {currency}</span>
