@@ -11,9 +11,21 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
-set -a
-source "$ENV_FILE"
-set +a
+env_value() {
+  local key="$1"
+  local line
+  line="$(grep -E "^[[:space:]]*${key}=" "$ENV_FILE" | tail -n 1 || true)"
+  line="${line#*=}"
+  line="${line%$'\r'}"
+
+  if [[ "${line:0:1}" == '"' && "${line: -1}" == '"' ]]; then
+    line="${line:1:-1}"
+  elif [[ "${line:0:1}" == "'" && "${line: -1}" == "'" ]]; then
+    line="${line:1:-1}"
+  fi
+
+  printf '%s' "$line"
+}
 
 required_vars=(
   APP_DOMAIN
@@ -29,11 +41,17 @@ required_vars=(
 )
 
 for key in "${required_vars[@]}"; do
-  if [[ -z "${!key:-}" ]]; then
+  value="$(env_value "$key")"
+  if [[ -z "$value" ]]; then
     echo "Required production variable is missing: $key" >&2
     exit 1
   fi
 done
+
+APP_DOMAIN="$(env_value APP_DOMAIN)"
+JWT_SECRET="$(env_value JWT_SECRET)"
+CONTROL_PANEL_PASSWORD="$(env_value CONTROL_PANEL_PASSWORD)"
+CONTROL_PANEL_JWT_SECRET="$(env_value CONTROL_PANEL_JWT_SECRET)"
 
 if [[ "$CONTROL_PANEL_PASSWORD" == "pass" ]]; then
   echo "CONTROL_PANEL_PASSWORD must not use the development default in production." >&2
@@ -47,12 +65,13 @@ fi
 
 compose() {
   if docker info >/dev/null 2>&1; then
-    docker compose "$@"
+    docker compose --env-file "$ENV_FILE" "$@"
   else
-    sudo docker compose "$@"
+    sudo docker compose --env-file "$ENV_FILE" "$@"
   fi
 }
 
+compose -f docker-compose.prod.yml config --quiet
 compose -f docker-compose.prod.yml pull --ignore-buildable || true
 compose -f docker-compose.prod.yml build --pull
 compose -f docker-compose.prod.yml up -d --remove-orphans

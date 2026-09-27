@@ -73,9 +73,9 @@ Before production sign-in is used, add the final HTTPS domain to the Google OAut
 
 ## Deploy
 
-The `Deploy to Oracle Free` workflow can be run manually from GitHub Actions.
+The `Deploy to Oracle Free` workflow is intentionally manual for the first production release. Open GitHub → Actions → Deploy to Oracle Free → Run workflow after the Oracle VM, DNS, firewall rules, and production secrets are ready.
 
-After the secrets exist, successful CI runs on `master` also trigger the Oracle workflow automatically.
+After the first successful production deployment is verified, automatic deployment from successful `master` CI can be enabled separately if desired.
 
 The workflow:
 
