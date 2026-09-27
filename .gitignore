@@ -9,3 +9,5 @@ coverage
 *.log
 .DS_Store
 .vercel
+.supabase/
+supabase/.temp/

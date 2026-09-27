@@ -35,6 +35,8 @@ jobs:
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ci-google-client-id.apps.googleusercontent.com
       NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
       DEFAULT_BASE_CURRENCY: USD
 
     steps:
@@ -52,11 +54,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Validate and migrate database
+      - name: Apply Supabase migrations to CI PostgreSQL
+        run: pnpm exec supabase db push --db-url "$DIRECT_URL"
+
+      - name: Generate and validate Prisma client
         run: |
           pnpm --filter @crypto-dca/web prisma:generate
-          pnpm --filter @crypto-dca/web exec prisma validate
-          pnpm --filter @crypto-dca/web prisma:deploy
+          pnpm --filter @crypto-dca/web prisma:validate
 
       - name: Test calculation engine
         run: pnpm --filter @crypto-dca/core test

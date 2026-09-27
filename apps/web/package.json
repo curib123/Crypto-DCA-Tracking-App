@@ -1,6 +1,6 @@
 {
   "name": "@crypto-dca/web",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
@@ -10,8 +10,7 @@
     "typecheck": "prisma generate && tsc --noEmit",
     "test": "node --check public/sw.js && tsx --test \"lib/*.test.ts\"",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
+    "prisma:validate": "prisma validate",
     "prisma:seed": "tsx prisma/seed.ts"
   },
   "prisma": {
