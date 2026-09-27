@@ -24,11 +24,18 @@ export function TransactionsClient() {
   const [pending, setPending] = useState(0);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [baseCurrency, setBaseCurrency] = useState("USD");
+  const [quoteCurrency, setQuoteCurrency] = useState("USD");
 
   const load = useCallback(async () => {
     try {
-      const result = await apiFetch<Transaction[]>("/transactions");
+      const [result, user] = await Promise.all([
+        apiFetch<Transaction[]>("/transactions"),
+        apiFetch<{ baseCurrency: string }>("/auth/me"),
+      ]);
       setRows(result);
+      setBaseCurrency(user.baseCurrency);
+      setQuoteCurrency((current) => current === "USD" ? user.baseCurrency : current);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to load transactions.");
     }
@@ -79,8 +86,11 @@ export function TransactionsClient() {
       quantity: Number(data.get("quantity")),
       unitPrice: Number(data.get("unitPrice")),
       amountSpent: Number(data.get("amountSpent")),
-      quoteCurrency: String(data.get("quoteCurrency")),
-      fxRateToBase: Number(data.get("fxRateToBase") || 1),
+      quoteCurrency,
+      fxRateToBase:
+        quoteCurrency === baseCurrency
+          ? 1
+          : Number(data.get("fxRateToBase")),
       feeBase: Number(data.get("feeBase") || 0),
       exchange: String(data.get("exchange") || ""),
       wallet: String(data.get("wallet") || ""),
@@ -151,7 +161,11 @@ export function TransactionsClient() {
 
           <label>
             Currency
-            <select name="quoteCurrency" defaultValue="USD">
+            <select
+              name="quoteCurrency"
+              value={quoteCurrency}
+              onChange={(event) => setQuoteCurrency(event.target.value)}
+            >
               {currencies.map((currency) => <option key={currency}>{currency}</option>)}
             </select>
           </label>
@@ -167,8 +181,21 @@ export function TransactionsClient() {
           </label>
 
           <label>
-            FX → base
-            <input name="fxRateToBase" type="number" step="any" min="0.00000001" defaultValue="1" />
+            FX → {baseCurrency}
+            <input
+              name="fxRateToBase"
+              type="number"
+              step="any"
+              min="0.00000001"
+              defaultValue="1"
+              disabled={quoteCurrency === baseCurrency}
+              required={quoteCurrency !== baseCurrency}
+              title={
+                quoteCurrency === baseCurrency
+                  ? "No conversion needed."
+                  : `Enter how much 1 ${quoteCurrency} was worth in ${baseCurrency} at transaction time.`
+              }
+            />
           </label>
 
           <label>
