@@ -141,7 +141,8 @@ Offline behavior:
 - Market displays the last synchronized prices with an explicit stale/offline timestamp.
 - Synchronized transaction deletion requires connectivity because ledger integrity must be checked by the server.
 - Authentication secrets are never stored in IndexedDB. The JWT remains in an HttpOnly cookie.
-- Signing out, or receiving a confirmed 401 session-expired response while online, clears that user's cached financial data from the device.
+- Explicit signing out clears that user's cached financial data from the device.
+- Session expiry does **not** delete cached/pending transactions; the active offline identity is cleared and the user signs in again, after which the same user ID can resume synchronization without losing queued entries.
 
 Authenticated API responses are not placed in the service-worker HTTP cache. Private financial data lives only in the per-user IndexedDB cache used by the application.
 
