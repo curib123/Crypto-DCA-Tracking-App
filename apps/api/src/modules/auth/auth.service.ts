@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../infrastructure/database/prisma.service";
+import { isSupportedCurrency } from "../../common/currency.constants";
 import { GoogleIdentityService } from "./google-identity.service";
 import { SessionService } from "./session.service";
 
@@ -14,7 +15,10 @@ export class AuthService {
     private readonly session: SessionService,
     config: ConfigService,
   ) {
-    this.defaultBaseCurrency = String(config.get("DEFAULT_BASE_CURRENCY") || "USD").toUpperCase();
+    const configuredCurrency = String(config.get("DEFAULT_BASE_CURRENCY") || "USD").toUpperCase();
+    this.defaultBaseCurrency = isSupportedCurrency(configuredCurrency)
+      ? configuredCurrency
+      : "USD";
   }
 
   async signInWithGoogle(credential: string) {
@@ -61,6 +65,16 @@ export class AuthService {
         });
       }
     } else {
+      const emailOwner = await this.prisma.user.findUnique({
+        where: { email: identity.email },
+      });
+
+      if (emailOwner && emailOwner.id !== user.id) {
+        throw new ConflictException(
+          "This Google email is already associated with another account.",
+        );
+      }
+
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
