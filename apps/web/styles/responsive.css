@@ -729,3 +729,52 @@
     width: min(360px, 94vw);
   }
 }
+
+
+@media (max-width: 640px) {
+  .dca-plan-summary {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .dca-plan-summary article {
+    min-height: 82px;
+    padding: 12px;
+  }
+
+  .dca-plan-summary strong {
+    font-size: 16px;
+  }
+
+  .dca-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dca-plan-card {
+    padding: 16px;
+  }
+
+  .dca-plan-actions .button {
+    flex: 1 1 42%;
+  }
+
+  .dca-plan-actions .text-button {
+    margin-left: 0;
+  }
+
+  .legal-page {
+    padding-top: 26px;
+  }
+
+  .legal-shell > .brand {
+    margin-bottom: 48px;
+  }
+
+  .system-state-card > div {
+    flex-direction: column;
+  }
+
+  .system-state-card .button {
+    width: 100%;
+  }
+}
