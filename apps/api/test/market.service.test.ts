@@ -25,18 +25,18 @@ class FakeProvider implements MarketProvider {
   }
 }
 
-test("concurrent market reads share one upstream refresh", async () => {
+test("1000 concurrent market reads share one upstream refresh", async () => {
   const provider = new FakeProvider();
   const service = new MarketService(provider);
 
   const results = await Promise.all(
-    Array.from({ length: 250 }, () => service.getPrices(["BTC"], "USD")),
+    Array.from({ length: 1000 }, () => service.getPrices(["BTC"], "USD")),
   );
 
   assert.equal(provider.calls, 1);
-  assert.equal(results.length, 250);
+  assert.equal(results.length, 1000);
   assert.equal(results[0].prices.BTC.price, 100_000);
-  assert.equal(results[249].prices.BTC.price, 100_000);
+  assert.equal(results[999].prices.BTC.price, 100_000);
 });
 
 test("fresh snapshot is reused without another provider request", async () => {
