@@ -403,8 +403,9 @@
   }
 
   .app-topbar {
-    height: 64px;
-    padding: 0 13px;
+    min-height: calc(64px + env(safe-area-inset-top));
+    height: auto;
+    padding: env(safe-area-inset-top) 13px 0;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
   }
 
@@ -435,7 +436,7 @@
   .app-page {
     width: min(100% - 24px, var(--content));
     padding-top: 18px;
-    padding-bottom: calc(var(--mobile-nav-height) + 42px);
+    padding-bottom: calc(var(--mobile-nav-height) + 42px + env(safe-area-inset-bottom));
   }
 
   .mobile-welcome {
@@ -455,7 +456,7 @@
   }
 
   .mobile-nav {
-    inset: auto 10px 10px;
+    inset: auto 10px max(10px, env(safe-area-inset-bottom));
     min-height: 68px;
     padding: 6px 7px;
     border-radius: 20px;
@@ -727,6 +728,7 @@
 
   .app-drawer {
     width: min(360px, 94vw);
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }
 

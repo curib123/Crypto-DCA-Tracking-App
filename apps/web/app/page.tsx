@@ -197,8 +197,7 @@ export default async function LandingPage() {
             <p>Install NextFi, record your real transactions and keep the analytics explainable.</p>
           </div>
           <div className="hero-actions">
-            <Link href="/login" className="button button-white button-large">Start free</Link>
-            <InstallButton className="button button-outline-white button-large" label={content.secondaryCtaLabel} />
+            <Link href="/app" className="button button-white button-large">Open NextFi</Link>
           </div>
         </section>
 

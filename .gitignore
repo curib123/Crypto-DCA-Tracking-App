@@ -11,3 +11,4 @@ coverage
 .vercel
 .supabase/
 supabase/.temp/
+apps/mobile/android/

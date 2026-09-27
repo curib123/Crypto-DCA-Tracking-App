@@ -3,6 +3,8 @@
 import Script from "next/script";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
+import { GoogleSignIn as NativeGoogleSignIn } from "@capawesome/capacitor-google-sign-in";
 import { apiFetch } from "@/lib/api";
 import { clearLogoutPending, setActiveUser } from "@/lib/offline";
 
@@ -53,6 +55,8 @@ export function GoogleSignIn() {
   const buttonRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [nativeApp, setNativeApp] = useState(false);
+  const [nativeReady, setNativeReady] = useState(false);
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
@@ -94,7 +98,7 @@ export function GoogleSignIn() {
     [router],
   );
 
-  const initializeGoogle = useCallback(() => {
+  const initializeGoogleWeb = useCallback(() => {
     if (!clientId || !window.google || !buttonRef.current) return;
 
     window.google.accounts.id.initialize({
@@ -115,21 +119,59 @@ export function GoogleSignIn() {
   }, [clientId, handleCredential]);
 
   useEffect(() => {
-    if (window.google) initializeGoogle();
-  }, [initializeGoogle]);
+    const isNative = Capacitor.isNativePlatform();
+    setNativeApp(isNative);
+
+    if (!isNative) {
+      if (window.google) initializeGoogleWeb();
+      return;
+    }
+
+    if (!clientId) return;
+
+    void NativeGoogleSignIn.initialize({ clientId })
+      .then(() => setNativeReady(true))
+      .catch((err) => setError(err instanceof Error ? err.message : "Could not initialize Google Sign-In."));
+  }, [clientId, initializeGoogleWeb]);
+
+  async function signInNative() {
+    if (!clientId || !nativeReady || busy) return;
+
+    setBusy(true);
+    setError("");
+
+    try {
+      const result = await NativeGoogleSignIn.signIn();
+      await handleCredential({ credential: result.idToken });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in was cancelled or failed.");
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="google-auth">
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={initializeGoogle}
-      />
+      {!nativeApp && (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onLoad={initializeGoogleWeb}
+        />
+      )}
 
       {!clientId ? (
         <div className="form-error" role="alert">
           Google Sign-In is not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID.
         </div>
+      ) : nativeApp ? (
+        <button
+          type="button"
+          className="button button-light button-wide native-google-button"
+          onClick={() => void signInNative()}
+          disabled={!nativeReady || busy}
+        >
+          {busy ? "Signing in…" : nativeReady ? "Continue with Google" : "Preparing Google Sign-In…"}
+        </button>
       ) : (
         <div className={busy ? "google-button is-busy" : "google-button"} ref={buttonRef} />
       )}

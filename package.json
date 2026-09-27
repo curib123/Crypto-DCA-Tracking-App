@@ -22,7 +22,11 @@
     "db:deploy": "supabase db push",
     "db:seed": "pnpm --filter @crypto-dca/web prisma:seed",
     "supabase:login": "supabase login",
-    "supabase:link": "supabase link --project-ref nzjpqochvjsnbqlzsflv"
+    "supabase:link": "supabase link --project-ref nzjpqochvjsnbqlzsflv",
+    "android:init": "pnpm --filter @crypto-dca/mobile android:init",
+    "android:sync": "pnpm --filter @crypto-dca/mobile android:sync",
+    "android:open": "pnpm --filter @crypto-dca/mobile android:open",
+    "android:apk": "pnpm --filter @crypto-dca/mobile android:build:debug"
   },
   "devDependencies": {
     "supabase": "2.118.0",
