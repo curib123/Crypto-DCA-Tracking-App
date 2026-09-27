@@ -25,6 +25,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-crypto_dca}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-crypto_dca}?schema=public
       JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
       CORS_ORIGIN: http://localhost:3000
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-replace-with-google-web-client-id.apps.googleusercontent.com}
+      DEFAULT_BASE_CURRENCY: ${DEFAULT_BASE_CURRENCY:-USD}
       COINGECKO_DEMO_API_KEY: ${COINGECKO_DEMO_API_KEY:-}
     ports:
       - "4000:4000"
@@ -40,6 +42,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:4000/api
         NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-replace-with-google-web-client-id.apps.googleusercontent.com}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-replace-with-google-web-client-id.apps.googleusercontent.com}
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:4000/api
