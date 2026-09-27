@@ -35,6 +35,12 @@ enum ThemePreference {
   DARK
 }
 
+enum AdOverride {
+  INHERIT
+  ENABLED
+  DISABLED
+}
+
 model User {
   id              String          @id @default(uuid())
   googleSubject   String          @unique
@@ -45,6 +51,7 @@ model User {
   role            UserRole        @default(USER)
   status          UserStatus      @default(ACTIVE)
   themePreference ThemePreference @default(SYSTEM)
+  adsOverride     AdOverride      @default(INHERIT)
   lastLoginAt     DateTime?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -101,5 +108,35 @@ model AdminAuditLog {
   createdAt   DateTime @default(now())
 
   @@index([actorUserId, createdAt])
+  @@index([createdAt])
+}
+
+
+model ControlPanelAdmin {
+  id                 String                 @id @default(uuid())
+  username           String                 @unique
+  passwordHash       String
+  mustChangePassword Boolean                @default(true)
+  failedAttempts     Int                    @default(0)
+  lockedUntil        DateTime?
+  lastLoginAt        DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  auditLogs          ControlPanelAuditLog[]
+
+  @@index([username])
+}
+
+model ControlPanelAuditLog {
+  id           String            @id @default(uuid())
+  actorAdminId String
+  actor        ControlPanelAdmin @relation(fields: [actorAdminId], references: [id], onDelete: Restrict)
+  action       String
+  targetType   String
+  targetId     String?
+  metadata     Json?
+  createdAt    DateTime          @default(now())
+
+  @@index([actorAdminId, createdAt])
   @@index([createdAt])
 }
