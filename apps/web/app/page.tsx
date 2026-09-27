@@ -95,7 +95,7 @@ export default function LandingPage() {
 
           <div className="header-actions">
             <Link href="/login" className="button button-ghost">Sign in</Link>
-            <Link href="/register" className="button button-dark">Start free</Link>
+            <Link href="/login" className="button button-dark">Start free</Link>
           </div>
         </header>
 
@@ -113,7 +113,7 @@ export default function LandingPage() {
             </p>
 
             <div className="hero-actions">
-              <Link href="/register" className="button button-dark button-large">Create free account</Link>
+              <Link href="/login" className="button button-dark button-large">Continue with Google</Link>
               <InstallButton className="button button-light button-large" />
             </div>
 
@@ -297,7 +297,7 @@ export default function LandingPage() {
             <p>Start with one real transaction and let the portfolio rebuild itself from there.</p>
           </div>
           <div className="hero-actions">
-            <Link href="/register" className="button button-white button-large">Start free</Link>
+            <Link href="/login" className="button button-white button-large">Start free</Link>
             <InstallButton className="button button-outline-white button-large" />
           </div>
         </section>
