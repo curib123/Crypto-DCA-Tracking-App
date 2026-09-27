@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch, formatMoney, isNetworkFailure } from "@/lib/api";
 import { PortfolioCharts } from "@/components/portfolio-charts";
+import { CoinAvatar } from "@/components/ui/coin-avatar";
+import { getCryptoMeta } from "@/lib/crypto-meta";
 import {
   cacheUserResource,
   getActiveUser,
@@ -48,6 +51,20 @@ export function DashboardClient() {
   const [offline, setOffline] = useState(false);
   const [cachedAt, setCachedAt] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [showBalance, setShowBalance] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("nextfi-show-balance");
+    if (stored === "false") setShowBalance(false);
+  }, []);
+
+  function toggleBalance() {
+    setShowBalance((current) => {
+      const next = !current;
+      localStorage.setItem("nextfi-show-balance", String(next));
+      return next;
+    });
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -101,11 +118,11 @@ export function DashboardClient() {
       }
     }
 
-    load();
+    void load();
 
-    const onOnline = () => load();
+    const onOnline = () => void load();
     const onOffline = () => setOffline(true);
-    const onDataUpdated = () => load();
+    const onDataUpdated = () => void load();
 
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
@@ -124,131 +141,115 @@ export function DashboardClient() {
   }
 
   if (!summary) {
-    return <div className="app-page"><div className="skeleton-card">Loading portfolio…</div></div>;
+    return <div className="app-page"><div className="skeleton-card">Loading your portfolio…</div></div>;
   }
 
   const { totals, currency, assets } = summary;
   const positive = totals.lifetimePnl >= 0;
+  const assetCount = assets.length;
+  const purchaseCount = assets.reduce((sum, asset) => sum + asset.buyCount, 0);
 
   return (
-    <div className="app-page">
-      <div className="page-heading">
+    <div className="app-page fintech-dashboard">
+      <div className="mobile-welcome">
         <div>
-          <span className="eyebrow">Portfolio overview</span>
-          <h1>Your DCA, without the guesswork.</h1>
-          <p>
-            Actual contributions, weighted cost and {offline ? "last synchronized" : "current"} value in {currency}.
-          </p>
+          <span className="eyebrow">Portfolio</span>
+          <strong>Good to see you.</strong>
         </div>
-        <div className="heading-statuses">
-          {offline && (
-            <span className="status-pill">
-              Offline · cached {cachedAt ? new Date(cachedAt).toLocaleString() : "previously"}
-            </span>
-          )}
-          {pendingCount > 0 && (
-            <span className="status-pill">
-              {pendingCount} pending · totals update after sync
-            </span>
-          )}
-          <span className="status-pill">Base currency · {currency}</span>
-        </div>
+        {offline && <span className="status-pill">Offline</span>}
       </div>
 
-      <section className="hero-metric panel">
-        <div>
-          <span className="metric-label">{offline ? "Last synchronized portfolio value" : "Current portfolio value"}</span>
-          <strong className="hero-number">{formatMoney(totals.currentValue, currency)}</strong>
-          <span className={positive ? "gain" : "loss"}>
-            {positive ? "+" : ""}{formatMoney(totals.lifetimePnl, currency)} · {totals.returnPct.toFixed(2)}%
-          </span>
+      <section className="portfolio-hero">
+        <div className="portfolio-hero-top">
+          <div>
+            <span className="metric-label">{offline ? "Last synchronized value" : "Total portfolio value"}</span>
+            <div className="balance-row">
+              <strong className={showBalance ? "hero-number" : "hero-number balance-hidden"}>
+                {showBalance ? formatMoney(totals.currentValue, currency) : "••••••"}
+              </strong>
+              <button type="button" className="balance-toggle" onClick={toggleBalance} aria-label={showBalance ? "Hide portfolio balance" : "Show portfolio balance"}>
+                {showBalance ? "Hide" : "Show"}
+              </button>
+            </div>
+            <span className={positive ? "gain hero-change" : "loss hero-change"}>
+              {positive ? "▲" : "▼"} {showBalance ? `${positive ? "+" : ""}${formatMoney(totals.lifetimePnl, currency)} · ${totals.returnPct.toFixed(2)}%` : "Portfolio performance hidden"}
+            </span>
+          </div>
+          <span className="hero-currency-chip">{currency}</span>
         </div>
 
-        <div className="hero-mini-grid">
-          <div>
-            <span>Actual invested</span>
-            <strong>{formatMoney(totals.invested, currency)}</strong>
-          </div>
-          <div>
-            <span>Unrealized P/L</span>
-            <strong>{formatMoney(totals.unrealizedPnl, currency)}</strong>
-          </div>
-          <div>
-            <span>Realized P/L</span>
-            <strong>{formatMoney(totals.realizedPnl, currency)}</strong>
-          </div>
-          <div>
-            <span>Fees tracked</span>
-            <strong>{formatMoney(totals.fees, currency)}</strong>
-          </div>
+        <div className="portfolio-hero-stats">
+          <div><span>Invested</span><strong>{showBalance ? formatMoney(totals.invested, currency) : "••••"}</strong></div>
+          <div><span>Unrealized P/L</span><strong className={totals.unrealizedPnl >= 0 ? "gain" : "loss"}>{showBalance ? formatMoney(totals.unrealizedPnl, currency) : "••••"}</strong></div>
+          <div><span>Realized P/L</span><strong className={totals.realizedPnl >= 0 ? "gain" : "loss"}>{showBalance ? formatMoney(totals.realizedPnl, currency) : "••••"}</strong></div>
         </div>
       </section>
 
-      <section className="metric-grid">
+      <section className="quick-actions" aria-label="Quick actions">
+        <button type="button" onClick={() => window.dispatchEvent(new Event("nextfi-open-transaction"))}>
+          <span>＋</span><strong>Add DCA</strong><small>Record a transaction</small>
+        </button>
+        <Link href="/app/portfolio">
+          <span>◫</span><strong>Portfolio</strong><small>View every position</small>
+        </Link>
+        <Link href="/app/dca-plans">
+          <span>◎</span><strong>DCA plans</strong><small>Set your cadence</small>
+        </Link>
+      </section>
+
+      <div className="dashboard-section-head">
+        <div><span className="eyebrow">Your assets</span><h2>Positions</h2></div>
+        <Link href="/app/portfolio">View all</Link>
+      </div>
+
+      <section className="home-asset-list panel">
+        {assets.slice(0, 5).map((asset) => {
+          const meta = getCryptoMeta(asset.symbol);
+          return (
+            <Link href="/app/portfolio" className="home-asset-row" key={asset.symbol}>
+              <CoinAvatar symbol={asset.symbol} size={42} />
+              <div className="home-asset-name">
+                <strong>{meta.name}</strong>
+                <span>{asset.quantity.toLocaleString(undefined, { maximumFractionDigits: 8 })} {asset.symbol}</span>
+              </div>
+              <div className="home-asset-value">
+                <strong>{showBalance ? formatMoney(asset.currentValue, currency) : "••••"}</strong>
+                <span className={asset.returnPct >= 0 ? "gain" : "loss"}>{asset.returnPct >= 0 ? "▲" : "▼"} {Math.abs(asset.returnPct).toFixed(2)}%</span>
+              </div>
+            </Link>
+          );
+        })}
+        {!assets.length && (
+          <div className="empty-state compact">
+            <h2>No crypto positions yet.</h2>
+            <p>Record your first DCA and NextFi will build your cost basis automatically.</p>
+            <button className="button button-dark" type="button" onClick={() => window.dispatchEvent(new Event("nextfi-open-transaction"))}>Add first transaction</button>
+          </div>
+        )}
+      </section>
+
+      <section className="metric-grid dashboard-metrics">
         <article className="panel metric-card">
           <span className="metric-label">Assets tracked</span>
-          <strong>{assets.length}</strong>
-          <p>Built from your transaction ledger.</p>
+          <strong>{assetCount}</strong>
+          <p>Crypto positions built from your ledger.</p>
         </article>
         <article className="panel metric-card">
           <span className="metric-label">DCA purchases</span>
-          <strong>{assets.reduce((sum, asset) => sum + asset.buyCount, 0)}</strong>
-          <p>Every buy contributes to weighted cost.</p>
+          <strong>{purchaseCount}</strong>
+          <p>Every buy contributes to weighted average cost.</p>
         </article>
         <article className="panel metric-card">
-          <span className="metric-label">Data status</span>
-          <strong>{offline ? "Offline cache" : assets.some((asset) => asset.marketSource === "live") ? "Live" : "Fallback"}</strong>
-          <p>{offline ? "Reconnect to refresh market-dependent values." : "Falls back to last entry if market data is unavailable."}</p>
+          <span className="metric-label">Sync status</span>
+          <strong>{offline ? "Offline" : pendingCount ? `${pendingCount} pending` : "Up to date"}</strong>
+          <p>{offline ? `Cached ${cachedAt ? new Date(cachedAt).toLocaleString() : "locally"}.` : "Portfolio and market-dependent values are synchronized."}</p>
         </article>
       </section>
 
+      <div className="dashboard-section-head analytics-title">
+        <div><span className="eyebrow">Analytics</span><h2>Portfolio breakdown</h2></div>
+      </div>
       <PortfolioCharts assets={assets} currency={currency} />
-
-      <section className="panel">
-        <div className="panel-title">
-          <div>
-            <span className="eyebrow">Positions</span>
-            <h2>Average entry and break-even</h2>
-          </div>
-        </div>
-
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Asset</th>
-                <th>Holdings</th>
-                <th>Avg. entry</th>
-                <th>Break-even</th>
-                <th>Current price</th>
-                <th>Current value</th>
-                <th>P/L</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assets.map((asset) => (
-                <tr key={asset.symbol}>
-                  <td><strong>{asset.symbol}</strong></td>
-                  <td>{asset.quantity.toLocaleString(undefined, { maximumFractionDigits: 8 })}</td>
-                  <td>{formatMoney(asset.averageEntry, currency)}</td>
-                  <td>{formatMoney(asset.breakEven, currency)}</td>
-                  <td>{formatMoney(asset.currentPrice, currency)}</td>
-                  <td><strong>{formatMoney(asset.currentValue, currency)}</strong></td>
-                  <td className={asset.unrealizedPnl >= 0 ? "gain" : "loss"}>
-                    {asset.unrealizedPnl >= 0 ? "+" : ""}{formatMoney(asset.unrealizedPnl, currency)}
-                    <small>{asset.returnPct.toFixed(2)}%</small>
-                  </td>
-                </tr>
-              ))}
-              {!assets.length && (
-                <tr>
-                  <td colSpan={7} className="empty-cell">No positions yet. Add your first DCA transaction.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </div>
   );
 }

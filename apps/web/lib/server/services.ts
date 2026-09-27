@@ -1,5 +1,6 @@
 import {
   AdOverride,
+  DcaFrequency,
   TransactionType,
   UserRole,
   UserStatus,
@@ -1227,6 +1228,170 @@ export async function aiInsights(userId: string) {
   insightCache.set(userId, {
     expiresAt: Date.now() + 10 * 60 * 1000,
     fingerprint,
+    value,
+  });
+
+  return value;
+}
+
+
+const DCA_FREQUENCIES = new Set<string>(Object.values(DcaFrequency));
+
+function dcaFrequency(value: unknown) {
+  const clean = asString(value, "DCA frequency", 24).toUpperCase();
+  if (!DCA_FREQUENCIES.has(clean)) {
+    throw new HttpError(400, "Unsupported DCA frequency.");
+  }
+  return clean as DcaFrequency;
+}
+
+function dcaStartDate(value: unknown) {
+  const date = new Date(asString(value, "Start date", 80));
+  if (Number.isNaN(date.getTime())) throw new HttpError(400, "Start date must be a valid date.");
+  return date;
+}
+
+function supportedAsset(value: unknown) {
+  const symbol = asString(value, "Asset symbol", 12).toUpperCase();
+  if (!SUPPORTED_ASSETS[symbol]) throw new HttpError(400, "Unsupported asset.");
+  return symbol;
+}
+
+export function listDcaPlans(userId: string) {
+  return prisma.dcaPlan.findMany({
+    where: { userId },
+    orderBy: [{ enabled: "desc" }, { createdAt: "desc" }],
+  });
+}
+
+export async function createDcaPlan(userId: string, input: Record<string, unknown>) {
+  const assetSymbol = supportedAsset(input.assetSymbol);
+  const amount = asNumber(input.amount, "DCA amount", Number.EPSILON);
+  const quoteCurrency = currency(input.quoteCurrency, "Quote currency");
+  const frequency = dcaFrequency(input.frequency);
+  const startDate = dcaStartDate(input.startDate);
+  const notes = optionalString(input.notes, 300);
+
+  return prisma.dcaPlan.create({
+    data: {
+      userId,
+      assetSymbol,
+      amount: String(amount),
+      quoteCurrency,
+      frequency,
+      startDate,
+      enabled: input.enabled === undefined ? true : Boolean(input.enabled),
+      notes,
+    },
+  });
+}
+
+export async function updateDcaPlan(userId: string, id: string, input: Record<string, unknown>) {
+  const row = await prisma.dcaPlan.findFirst({ where: { id, userId } });
+  if (!row) throw new HttpError(404, "DCA plan not found.");
+
+  const data: {
+    assetSymbol?: string;
+    amount?: string;
+    quoteCurrency?: string;
+    frequency?: DcaFrequency;
+    startDate?: Date;
+    enabled?: boolean;
+    notes?: string | null;
+  } = {};
+
+  if (input.assetSymbol !== undefined) data.assetSymbol = supportedAsset(input.assetSymbol);
+  if (input.amount !== undefined) data.amount = String(asNumber(input.amount, "DCA amount", Number.EPSILON));
+  if (input.quoteCurrency !== undefined) data.quoteCurrency = currency(input.quoteCurrency, "Quote currency");
+  if (input.frequency !== undefined) data.frequency = dcaFrequency(input.frequency);
+  if (input.startDate !== undefined) data.startDate = dcaStartDate(input.startDate);
+  if (input.enabled !== undefined) {
+    if (typeof input.enabled !== "boolean") throw new HttpError(400, "Enabled must be true or false.");
+    data.enabled = input.enabled;
+  }
+  if (input.notes !== undefined) data.notes = optionalString(input.notes, 300);
+
+  if (!Object.keys(data).length) throw new HttpError(400, "No DCA plan changes were provided.");
+
+  return prisma.dcaPlan.update({ where: { id }, data });
+}
+
+export async function removeDcaPlan(userId: string, id: string) {
+  const row = await prisma.dcaPlan.findFirst({ where: { id, userId } });
+  if (!row) return { deleted: false };
+  await prisma.dcaPlan.delete({ where: { id } });
+  return { deleted: true };
+}
+
+
+type MarketAssetDetail = {
+  symbol: string;
+  currency: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+  volume24h: number;
+  high24h: number;
+  low24h: number;
+  circulatingSupply: number;
+  totalSupply: number | null;
+  maxSupply: number | null;
+  marketCapRank: number | null;
+  lastUpdated: string | null;
+};
+
+const marketAssetDetailCache = new Map<string, { expiresAt: number; value: MarketAssetDetail }>();
+
+export async function getMarketAssetDetail(symbolRaw: string, currencyRaw: string) {
+  const symbol = supportedAsset(symbolRaw);
+  const displayCurrency = currency(currencyRaw, "Market currency");
+  const providerCode = providerCurrency(displayCurrency).toLowerCase();
+  const cacheKey = symbol + ":" + displayCurrency;
+  const cached = marketAssetDetailCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  const endpoint = new URL("https://api.coingecko.com/api/v3/coins/markets");
+  endpoint.searchParams.set("vs_currency", providerCode);
+  endpoint.searchParams.set("ids", SUPPORTED_ASSETS[symbol]);
+  endpoint.searchParams.set("price_change_percentage", "24h");
+  endpoint.searchParams.set("sparkline", "false");
+
+  const demoKey = String(process.env.COINGECKO_DEMO_API_KEY || "").trim();
+  const response = await fetch(endpoint, {
+    signal: AbortSignal.timeout(7000),
+    headers: {
+      accept: "application/json",
+      "user-agent": "NextFi/1.0",
+      ...(demoKey ? { "x-cg-demo-api-key": demoKey } : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) throw new HttpError(503, "Market detail provider unavailable.");
+
+  const rows = (await response.json()) as Array<Record<string, unknown>>;
+  const row = rows[0];
+  if (!row) throw new HttpError(404, "Market detail not found.");
+
+  const value: MarketAssetDetail = {
+    symbol,
+    currency: displayCurrency,
+    price: Number(row.current_price || 0),
+    change24h: Number(row.price_change_percentage_24h || 0),
+    marketCap: Number(row.market_cap || 0),
+    volume24h: Number(row.total_volume || 0),
+    high24h: Number(row.high_24h || 0),
+    low24h: Number(row.low_24h || 0),
+    circulatingSupply: Number(row.circulating_supply || 0),
+    totalSupply: row.total_supply === null || row.total_supply === undefined ? null : Number(row.total_supply),
+    maxSupply: row.max_supply === null || row.max_supply === undefined ? null : Number(row.max_supply),
+    marketCapRank: row.market_cap_rank === null || row.market_cap_rank === undefined ? null : Number(row.market_cap_rank),
+    lastUpdated: typeof row.last_updated === "string" ? row.last_updated : null,
+  };
+
+  marketAssetDetailCache.set(cacheKey, {
+    expiresAt: Date.now() + 15 * 60 * 1000,
     value,
   });
 

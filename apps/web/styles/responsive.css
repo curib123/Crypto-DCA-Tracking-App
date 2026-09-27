@@ -391,3 +391,406 @@
     margin-bottom: 18px;
   }
 }
+
+
+/* FinTech mobile shell overrides */
+@media (max-width: 820px) {
+  .desktop-topbar-copy,
+  .desktop-add,
+  .app-topbar .theme-control,
+  .app-topbar .account-button {
+    display: none;
+  }
+
+  .app-topbar {
+    height: 64px;
+    padding: 0 13px;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+  }
+
+  .mobile-topbar {
+    display: flex !important;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .mobile-topbar .brand {
+    padding: 0;
+  }
+
+  .mobile-topbar .brand .nextfi-logo {
+    width: 27px;
+    height: 27px;
+  }
+
+  .mobile-topbar .brand span {
+    font-size: 13px;
+  }
+
+  .topbar-actions {
+    width: auto;
+    margin-left: auto;
+  }
+
+  .app-page {
+    width: min(100% - 24px, var(--content));
+    padding-top: 18px;
+    padding-bottom: calc(var(--mobile-nav-height) + 42px);
+  }
+
+  .mobile-welcome {
+    margin: 0 2px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-welcome > div {
+    display: grid;
+    gap: 3px;
+  }
+
+  .mobile-welcome strong {
+    font-size: 15px;
+  }
+
+  .mobile-nav {
+    inset: auto 10px 10px;
+    min-height: 68px;
+    padding: 6px 7px;
+    border-radius: 20px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
+    background: color-mix(in srgb, var(--surface) 97%, transparent);
+  }
+
+  .mobile-nav a {
+    min-height: 51px;
+    padding: 8px 2px 6px;
+    border-radius: 12px;
+    color: var(--muted);
+    background: transparent !important;
+    font-size: 9px;
+  }
+
+  .mobile-nav a.active {
+    color: var(--ink);
+  }
+
+  .mobile-nav a.active svg {
+    stroke-width: 2.2;
+  }
+
+  .mobile-add-action {
+    min-height: 58px;
+    margin-top: -23px;
+    border: 0;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 4px;
+    color: var(--ink);
+    background: transparent;
+  }
+
+  .mobile-add-action > span {
+    width: 48px;
+    height: 48px;
+    border-radius: 17px;
+    display: grid;
+    place-items: center;
+    color: var(--inverse-ink);
+    background: var(--inverse);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .mobile-add-action small {
+    font-size: 9px;
+    font-weight: 750;
+  }
+
+  .portfolio-hero {
+    min-height: 238px;
+  }
+
+  .asset-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .activity-more {
+    grid-column: 3;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-heading {
+    margin-bottom: 16px;
+  }
+
+  .page-heading .button {
+    width: 100%;
+  }
+
+  .portfolio-hero {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .portfolio-hero-top {
+    min-height: 125px;
+  }
+
+  .portfolio-hero .hero-number {
+    font-size: clamp(35px, 11vw, 50px);
+  }
+
+  .portfolio-hero-stats {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .portfolio-hero-stats strong {
+    font-size: 11px;
+  }
+
+  .quick-actions {
+    gap: 7px;
+  }
+
+  .quick-actions > a,
+  .quick-actions > button {
+    min-height: 86px;
+    padding: 11px 9px;
+    border-radius: 14px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .quick-actions > * > span {
+    grid-row: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .quick-actions small {
+    display: none;
+  }
+
+  .dashboard-metrics {
+    display: none;
+  }
+
+  .home-asset-row {
+    padding-inline: 13px;
+  }
+
+  .portfolio-summary-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--line);
+  }
+
+  .portfolio-summary-strip > div {
+    border-right: 0;
+    background: var(--surface);
+  }
+
+  .asset-card {
+    padding: 16px;
+    border-radius: 17px;
+  }
+
+  .asset-card-value strong {
+    font-size: 22px;
+  }
+
+  .asset-detail-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .activity-item {
+    padding: 14px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .activity-amount {
+    grid-column: 2;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .activity-more {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .profile-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .profile-card > .status-pill {
+    grid-column: 2;
+  }
+
+  .settings-list-item {
+    min-height: 68px;
+    padding: 13px 14px;
+  }
+
+  .settings-list-item .theme-control {
+    grid-column: 2;
+    margin-top: 6px;
+  }
+
+  .danger-zone {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .danger-zone .button {
+    width: 100%;
+  }
+
+  .modal-layer {
+    padding: 0;
+    place-items: end center;
+  }
+
+  .app-modal {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    border-width: 1px 0 0;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .modal-header {
+    padding: 18px 17px 15px;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .modal-body {
+    padding: 17px;
+  }
+
+  .modal-footer {
+    padding: 12px 17px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .modal-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-form-grid .field-wide {
+    grid-column: auto;
+  }
+
+  .transaction-preview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .transaction-preview > div {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .transaction-preview > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .transaction-preview > div:nth-child(3),
+  .transaction-preview > div:nth-child(4) {
+    border-bottom: 0;
+  }
+
+  .modal-form-actions {
+    position: sticky;
+    bottom: -17px;
+    margin: 0 -17px -17px;
+    padding: 12px 17px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .modal-form-actions .button {
+    flex: 1;
+  }
+
+  .app-drawer {
+    width: min(360px, 94vw);
+  }
+}
+
+
+@media (max-width: 640px) {
+  .dca-plan-summary {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .dca-plan-summary article {
+    min-height: 82px;
+    padding: 12px;
+  }
+
+  .dca-plan-summary strong {
+    font-size: 16px;
+  }
+
+  .dca-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dca-plan-card {
+    padding: 16px;
+  }
+
+  .dca-plan-actions .button {
+    flex: 1 1 42%;
+  }
+
+  .dca-plan-actions .text-button {
+    margin-left: 0;
+  }
+
+  .legal-page {
+    padding-top: 26px;
+  }
+
+  .legal-shell > .brand {
+    margin-bottom: 48px;
+  }
+
+  .system-state-card > div {
+    flex-direction: column;
+  }
+
+  .system-state-card .button {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .help-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .feedback-card .button {
+    width: 100%;
+  }
+}

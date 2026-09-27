@@ -14,6 +14,29 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#090909",
     orientation: "portrait-primary",
     categories: ["finance", "productivity", "utilities"],
+    shortcuts: [
+      {
+        name: "Add transaction",
+        short_name: "Add",
+        description: "Record a crypto transaction in NextFi",
+        url: "/app/transactions?action=add",
+        icons: [{ src: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Portfolio",
+        short_name: "Portfolio",
+        description: "Open your crypto portfolio",
+        url: "/app/portfolio",
+        icons: [{ src: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "DCA plans",
+        short_name: "DCA Plans",
+        description: "Review your DCA contribution plans",
+        url: "/app/dca-plans",
+        icons: [{ src: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+    ],
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
