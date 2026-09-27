@@ -80,3 +80,34 @@ test("offline logout marker survives until explicit server logout cleanup", asyn
   await clearLogoutPending();
   assert.equal(await isLogoutPending(), false);
 });
+
+
+test("pending transactions are returned in ledger chronology, not UUID key order", async () => {
+  const user = { id: "order-user", email: "order@example.com", baseCurrency: "USD" };
+  await setActiveUser(user);
+
+  await queueTransaction(user.id, {
+    clientReference: "44444444-4444-4444-8444-444444444444",
+    assetSymbol: "BTC",
+    type: "SELL",
+    quantity: 0.5,
+    occurredAt: "2026-02-02T00:00:00.000Z",
+  });
+
+  await queueTransaction(user.id, {
+    clientReference: "55555555-5555-4555-8555-555555555555",
+    assetSymbol: "BTC",
+    type: "BUY",
+    quantity: 1,
+    occurredAt: "2026-02-01T00:00:00.000Z",
+  });
+
+  const rows = await pendingTransactions(user.id);
+
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].type, "BUY");
+  assert.equal(rows[1].type, "SELL");
+
+  await clearUserOfflineData(user.id);
+  await clearActiveUser();
+});
