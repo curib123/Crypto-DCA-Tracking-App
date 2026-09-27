@@ -37,6 +37,9 @@ export function NavIcon({ name, size = 18 }: { name: NavIconName; size?: number 
   if (name === "plus") {
     return <svg {...common}><path d="M12 5v14M5 12h14"/></svg>;
   }
+  if (name === "calendar") {
+    return <svg {...common}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M8 14h3M8 17h6"/></svg>;
+  }
   if (name === "users") {
     return <svg {...common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>;
   }
