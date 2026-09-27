@@ -1,9 +1,12 @@
 export type NavIconName =
   | "home"
+  | "portfolio"
   | "ledger"
   | "market"
   | "insights"
   | "settings"
+  | "profile"
+  | "plus"
   | "users"
   | "ads"
   | "content"
@@ -18,10 +21,18 @@ export type NavigationItem = {
 
 export const APP_NAVIGATION: NavigationItem[] = [
   { href: "/app", label: "Overview", mobileLabel: "Home", icon: "home" },
-  { href: "/app/transactions", label: "Transactions", mobileLabel: "Ledger", icon: "ledger" },
+  { href: "/app/portfolio", label: "Portfolio", icon: "portfolio" },
+  { href: "/app/transactions", label: "Activity", icon: "ledger" },
   { href: "/app/market", label: "Market", icon: "market" },
   { href: "/app/insights", label: "AI Insights", mobileLabel: "Insights", icon: "insights" },
-  { href: "/app/settings", label: "Settings", icon: "settings" },
+  { href: "/app/settings", label: "Profile & settings", mobileLabel: "Profile", icon: "profile" },
+];
+
+export const MOBILE_NAVIGATION: NavigationItem[] = [
+  { href: "/app", label: "Home", icon: "home" },
+  { href: "/app/portfolio", label: "Portfolio", icon: "portfolio" },
+  { href: "/app/transactions", label: "Activity", icon: "ledger" },
+  { href: "/app/settings", label: "Profile", icon: "profile" },
 ];
 
 export const CONTROL_NAVIGATION: NavigationItem[] = [
