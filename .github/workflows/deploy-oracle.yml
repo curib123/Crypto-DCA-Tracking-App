@@ -2,6 +2,10 @@ name: Deploy to Oracle Free
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [production]
 
 concurrency:
   group: nextfi-oracle-production
@@ -12,6 +16,13 @@ permissions:
 
 jobs:
   deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'production'
+      )
     runs-on: ubuntu-latest
     env:
       ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
@@ -19,6 +30,7 @@ jobs:
       ORACLE_SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
       ORACLE_SSH_PORT: ${{ secrets.ORACLE_SSH_PORT }}
       ORACLE_ENV_FILE: ${{ secrets.ORACLE_ENV_FILE }}
+      DEPLOY_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'production' }}
 
     steps:
       - name: Check deployment configuration
@@ -41,11 +53,11 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout production source
+      - name: Checkout tested production revision
         if: steps.config.outputs.ready == 'true'
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: ${{ env.DEPLOY_REF }}
 
       - name: Configure SSH
         if: steps.config.outputs.ready == 'true'
@@ -69,7 +81,7 @@ jobs:
           port="${ORACLE_SSH_PORT:-22}"
           ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'bash -s' < scripts/oracle/bootstrap-docker.sh
 
-      - name: Upload production source
+      - name: Upload tested production source
         if: steps.config.outputs.ready == 'true'
         shell: bash
         run: |
@@ -103,4 +115,4 @@ jobs:
       - name: Deployment not configured
         if: steps.config.outputs.ready != 'true'
         run: |
-          echo "Oracle deployment workflow is ready, but production secrets are not configured yet."
+          echo "Production CI/CD is active, but Oracle deployment secrets are not configured yet."

@@ -71,19 +71,45 @@ AdSense can remain blank and disabled until the site is approved.
 
 Before production sign-in is used, add the final HTTPS domain to the Google OAuth web application's authorized JavaScript origins.
 
-## Deploy
+## Production branch CI/CD
 
-The `Deploy to Oracle Free` workflow is intentionally manual for the first production release. Open GitHub → Actions → Deploy to Oracle Free → Run workflow after the Oracle VM, DNS, firewall rules, and production secrets are ready.
+NextFi uses a dedicated `production` branch as the release boundary:
 
-After the first successful production deployment is verified, automatic deployment from successful `master` CI can be enabled separately if desired.
+```text
+feature/* → pull request → master
+                          ↓
+                 promote/merge to production
+                          ↓
+                    CI workflow
+                          ↓ success only
+               Deploy to Oracle Free
+                          ↓
+                Oracle production VM
+```
 
-The workflow:
+A push or merge to `production` runs the same full CI suite used by `master`. The Oracle deployment workflow listens for the completed CI run and deploys only when that exact production revision passed CI.
 
-1. installs Docker Engine and Compose on a fresh supported VM if needed;
-2. transfers the current `master` source over SSH;
-3. writes the production env with mode 600;
-4. builds and starts PostgreSQL, API, Next.js and Caddy;
-5. runs an internal API health check;
-6. checks the public HTTPS health endpoint when DNS is ready.
+The deployment checks out the tested commit SHA instead of blindly deploying the newest branch state. This prevents a later untested commit from being deployed by an earlier successful workflow.
+
+The deployment workflow:
+
+1. verifies the Oracle GitHub secrets are present;
+2. checks out the exact revision that passed production CI;
+3. installs Docker Engine and Compose on a fresh supported VM if needed;
+4. transfers the tested source over SSH;
+5. writes the production env with mode 600;
+6. builds and starts PostgreSQL, API, Next.js and Caddy;
+7. runs an internal API health check;
+8. checks the public HTTPS health endpoint when DNS is ready.
+
+A manual `Deploy to Oracle Free` action remains available and always deploys the current `production` branch.
+
+If Oracle secrets are not configured yet, CI still runs normally and the deployment workflow exits without touching a server.
 
 The production database and Caddy certificates are Docker named volumes and are not overwritten by application deployments.
+
+### Recommended release workflow
+
+Keep day-to-day development on feature branches and `master`. Promote only reviewed, release-ready commits into `production`.
+
+For stronger protection, configure a GitHub branch rule for `production` that requires pull requests and a passing `CI / verify` check before merging.

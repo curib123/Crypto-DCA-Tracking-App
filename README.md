@@ -463,3 +463,18 @@ Do not persist user-editable "profit", "average entry", or "break-even" values. 
 ## Disclaimer
 
 NextFi is portfolio tracking and analytics software. It does not custody cryptocurrency, execute trades, guarantee investment returns, or replace professional financial advice.
+
+
+## Production branch CI/CD
+
+The repository uses `master` for integration and a dedicated `production` branch for releases.
+
+```text
+feature branches → master → production → CI → Oracle Cloud
+```
+
+Every push or merge to `production` runs the complete CI suite. Oracle deployment starts automatically only after that production CI succeeds, and it deploys the exact commit SHA that passed the tests.
+
+The manual Oracle deployment action remains available and deploys the current `production` branch.
+
+See `docs/ORACLE_DEPLOYMENT.md` for the Oracle secrets, DNS, firewall, Google OAuth, and release setup.
