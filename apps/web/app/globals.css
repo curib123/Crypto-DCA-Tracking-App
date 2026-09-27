@@ -2074,3 +2074,95 @@ th {
     background: var(--ink);
   }
 }
+
+
+/* ADSENSE AND CONTROL PANEL */
+.control-login-card {
+  max-width: 500px;
+}
+
+.credential-list {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.credential-list > div {
+  padding: 11px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--soft);
+  font-size: 12px;
+}
+
+.credential-list span {
+  color: var(--muted);
+}
+
+.credential-list strong {
+  text-align: right;
+}
+
+.ads-policy-note {
+  margin-top: 16px;
+  padding: 22px;
+}
+
+.ads-policy-note h2 {
+  margin: 7px 0 8px;
+  font-size: 19px;
+}
+
+.ads-policy-note p {
+  max-width: 850px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.adsense-placement {
+  width: min(1180px, calc(100% - 48px));
+  min-height: 90px;
+  margin: 16px auto 34px;
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.adsense-landing {
+  width: min(1180px, calc(100% - 32px));
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.ad-label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+@media (max-width: 720px) {
+  .adsense-placement {
+    width: min(100% - 24px, 1180px);
+    margin-bottom: 88px;
+  }
+
+  .credential-list > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .credential-list strong {
+    text-align: left;
+  }
+}

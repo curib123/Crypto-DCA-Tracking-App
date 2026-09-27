@@ -1,11 +1,22 @@
 import { Module } from "@nestjs/common";
-import { AuthModule } from "../auth/auth.module";
+import { AdsModule } from "../ads/ads.module";
 import { ContentModule } from "../content/content.module";
-import { AdminController, AdminGuard, AdminService } from "./admin";
+import { AdminController, AdminService } from "./admin";
+import {
+  ControlPanelAuthController,
+  ControlPanelAuthService,
+  ControlPanelReadyGuard,
+  ControlPanelSessionGuard,
+} from "./control-panel-auth";
 
 @Module({
-  imports: [AuthModule, ContentModule],
-  controllers: [AdminController],
-  providers: [AdminGuard, AdminService],
+  imports: [AdsModule, ContentModule],
+  controllers: [AdminController, ControlPanelAuthController],
+  providers: [
+    AdminService,
+    ControlPanelAuthService,
+    ControlPanelSessionGuard,
+    ControlPanelReadyGuard,
+  ],
 })
 export class AdminModule {}

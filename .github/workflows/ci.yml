@@ -27,6 +27,9 @@ jobs:
     env:
       DATABASE_URL: postgresql://crypto_dca_ci:crypto_dca_ci_password@localhost:5432/crypto_dca_ci?schema=public
       JWT_SECRET: ci-only-secret-at-least-32-characters-long
+      CONTROL_PANEL_USERNAME: admin
+      CONTROL_PANEL_PASSWORD: pass
+      CONTROL_PANEL_JWT_SECRET: ci-control-panel-secret-at-least-32-characters
       CORS_ORIGIN: http://localhost:3000
       GOOGLE_CLIENT_ID: ci-google-client-id.apps.googleusercontent.com
       DEFAULT_BASE_CURRENCY: USD
@@ -178,3 +181,68 @@ jobs:
           # Cross-currency ledger records require an explicit historical FX rate.
           STATUS=$(curl --silent --output /tmp/fx.json --write-out '%{http_code}'             -b "$COOKIE"             -H 'Content-Type: application/json'             -d '{"clientReference":"33333333-3333-4333-8333-333333333333","assetSymbol":"ETH","type":"BUY","quantity":0.01,"unitPrice":200000,"amountSpent":2000,"quoteCurrency":"PHP","feeBase":0,"occurredAt":"2026-01-02T00:00:00.000Z"}'             http://localhost:4000/api/transactions)
           test "$STATUS" = "400"
+
+
+          # Control panel uses a separate username/password session.
+          ADMIN_JAR=/tmp/nextfi-admin-cookies.txt
+          LOGIN_STATUS=$(curl --silent --output /tmp/admin-login.json --write-out '%{http_code}' \
+            -c "$ADMIN_JAR" \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"pass"}' \
+            http://localhost:4000/api/admin-auth/login)
+          test "$LOGIN_STATUS" = "201"
+
+          cat /tmp/admin-login.json | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              const j=JSON.parse(s);
+              if(!j.admin || j.admin.username!=="admin" || j.admin.mustChangePassword!==true) {
+                throw new Error("Bootstrap admin login contract failed");
+              }
+            });
+          '
+
+          # Default bootstrap credentials must not unlock admin APIs until changed.
+          STATUS=$(curl --silent --output /tmp/admin-before-change.json --write-out '%{http_code}' \
+            -b "$ADMIN_JAR" \
+            http://localhost:4000/api/admin/overview)
+          test "$STATUS" = "403"
+
+          curl --fail --silent \
+            -b "$ADMIN_JAR" \
+            -H 'Content-Type: application/json' \
+            -d '{"currentPassword":"pass","newPassword":"NextFi-CI-Secure-123!"}' \
+            http://localhost:4000/api/admin-auth/change-password >/tmp/admin-password-change.json
+
+          curl --fail --silent \
+            -b "$ADMIN_JAR" \
+            http://localhost:4000/api/admin/overview >/tmp/admin-overview.json
+
+          # AdSense is configured structurally but remains disabled without env publisher IDs.
+          curl --fail --silent \
+            -b "$ADMIN_JAR" \
+            http://localhost:4000/api/admin/ads | node -e '
+              let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+                const j=JSON.parse(s);
+                if(j.settings.masterEnabled!==false) throw new Error("Ads must default off");
+                if(j.credentials.clientConfigured!==false) throw new Error("CI should not have AdSense credentials");
+              });
+            '
+
+          curl --fail --silent \
+            -b "$ADMIN_JAR" \
+            -H 'Content-Type: application/json' \
+            -X PUT \
+            -d '{"masterEnabled":true,"appEnabled":true,"landingEnabled":true,"defaultForUsers":true}' \
+            http://localhost:4000/api/admin/ads >/tmp/admin-ads-update.json
+
+          curl --fail --silent http://localhost:4000/api/ads/public | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              const j=JSON.parse(s);
+              if(j.enabled!==false) throw new Error("Ads must stay off without valid publisher credentials");
+            });
+          '
+
+          curl --fail --silent \
+            -b "$ADMIN_JAR" \
+            -X POST \
+            http://localhost:4000/api/admin-auth/logout >/tmp/admin-logout.json

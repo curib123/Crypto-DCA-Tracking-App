@@ -8,7 +8,7 @@ type Overview = {
   totals: {
     users: number;
     activeUsers7d: number;
-    admins: number;
+    appAdmins: number;
     suspendedUsers: number;
     transactions30d: number;
   };

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
 import { applyTheme, ThemeControl } from "@/components/theme-control";
+import { AdSenseSlot } from "@/components/adsense-slot";
 import {
   clearActiveUser,
   clearLogoutPending,
@@ -206,11 +207,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {link.label}
             </AppNavLink>
           ))}
-          {user?.role === "ADMIN" && !offline && (
-            <Link href="/admin" className={pathname.startsWith("/admin") ? "active" : undefined}>
-              Admin
-            </Link>
-          )}
         </nav>
 
         <div className="sidebar-foot">
@@ -234,6 +230,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         {children}
+        {!offline && <AdSenseSlot placement="app" />}
       </div>
 
       <nav className="mobile-nav" aria-label="Mobile application navigation">
