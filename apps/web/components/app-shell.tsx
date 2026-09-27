@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
+import {
+  clearActiveUser,
+  clearUserOfflineData,
+  getActiveUser,
+  setActiveUser,
+} from "@/lib/offline";
 
 const links = [
   { href: "/app", label: "Overview" },
@@ -15,17 +21,70 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    apiFetch("/auth/me")
-      .then(() => setReady(true))
-      .catch(() => router.replace("/login"));
+    let mounted = true;
+
+    async function verify() {
+      try {
+        const user = await apiFetch<{ id: string; email: string; baseCurrency: string }>("/auth/me");
+        await setActiveUser(user);
+        if (mounted) {
+          setOffline(false);
+          setReady(true);
+        }
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          await clearActiveUser();
+          if (mounted) router.replace("/login");
+          return;
+        }
+
+        const cachedUser = await getActiveUser();
+        const canUseOffline =
+          Boolean(cachedUser) &&
+          (!navigator.onLine || isNetworkFailure(error));
+
+        if (canUseOffline) {
+          if (mounted) {
+            setOffline(true);
+            setReady(true);
+          }
+          return;
+        }
+
+        if (mounted) router.replace("/login");
+      }
+    }
+
+    verify();
+
+    const onOnline = () => {
+      verify();
+    };
+    const onOffline = () => setOffline(true);
+
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
   }, [router]);
 
   async function signOut() {
+    const active = await getActiveUser();
+
     try {
-      await apiFetch("/auth/logout", { method: "POST" }, false);
+      if (navigator.onLine) {
+        await apiFetch("/auth/logout", { method: "POST" }, false);
+      }
     } finally {
+      if (active) await clearUserOfflineData(active.id);
+      await clearActiveUser();
       router.push("/");
       router.refresh();
     }
@@ -64,12 +123,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="app-main">
         <header className="app-topbar">
           <div>
-            <span className="eyebrow">DCA workspace</span>
-            <strong>Track real cost, not hype.</strong>
+            <span className="eyebrow">{offline ? "Offline mode" : "DCA workspace"}</span>
+            <strong>{offline ? "Reading last synchronized data." : "Track real cost, not hype."}</strong>
           </div>
-          <Link href="/app/transactions" className="button button-dark button-small">
-            + Add DCA
-          </Link>
+          <div className="topbar-actions">
+            {offline && <span className="status-pill">Offline</span>}
+            <Link href="/app/transactions" className="button button-dark button-small">
+              + Add DCA
+            </Link>
+          </div>
         </header>
         {children}
       </div>
