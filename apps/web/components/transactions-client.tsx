@@ -1,23 +1,59 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { apiFetch, formatMoney } from "@/lib/api";
-import { pendingTransactions, queueTransaction, removePending } from "@/lib/offline";
+import { apiFetch, formatMoney, isNetworkFailure } from "@/lib/api";
+import {
+  cacheUserResource,
+  getActiveUser,
+  getCachedUserResource,
+  pendingTransactions,
+  queueTransaction,
+  removePending,
+  setActiveUser,
+} from "@/lib/offline";
 
 type Transaction = {
   id: string;
   assetSymbol: string;
   type: string;
-  quantity: string;
-  unitPrice: string;
-  amountSpent: string;
+  quantity: string | number;
+  unitPrice: string | number;
+  amountSpent: string | number;
   quoteCurrency: string;
   exchange?: string | null;
   occurredAt: string;
+  pending?: boolean;
+};
+
+type UserProfile = {
+  id: string;
+  email: string;
+  baseCurrency: string;
 };
 
 const assetOptions = ["BTC", "ETH", "SOL", "BNB", "LINK", "HYPE", "XLM"];
 const currencies = ["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "SGD", "JPY", "KRW", "MYR", "IDR", "THB", "USDT", "USDC"];
+
+function queuedAsTransactions(rows: Record<string, unknown>[]): Transaction[] {
+  return rows.map((row) => ({
+    id: String(row._offlineId),
+    assetSymbol: String(row.assetSymbol || ""),
+    type: String(row.type || ""),
+    quantity: Number(row.quantity || 0),
+    unitPrice: Number(row.unitPrice || 0),
+    amountSpent: Number(row.amountSpent || 0),
+    quoteCurrency: String(row.quoteCurrency || ""),
+    exchange: row.exchange ? String(row.exchange) : null,
+    occurredAt: String(row.occurredAt || row._queuedAt || new Date().toISOString()),
+    pending: true,
+  }));
+}
+
+function mergeRows(serverRows: Transaction[], queuedRows: Record<string, unknown>[]) {
+  return [...queuedAsTransactions(queuedRows), ...serverRows].sort(
+    (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
+  );
+}
 
 export function TransactionsClient() {
   const [rows, setRows] = useState<Transaction[]>([]);
@@ -26,38 +62,93 @@ export function TransactionsClient() {
   const [busy, setBusy] = useState(false);
   const [baseCurrency, setBaseCurrency] = useState("USD");
   const [quoteCurrency, setQuoteCurrency] = useState("USD");
+  const [userId, setUserId] = useState("");
+  const [offline, setOffline] = useState(false);
+  const [cachedAt, setCachedAt] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    try {
-      const [result, user] = await Promise.all([
-        apiFetch<Transaction[]>("/transactions"),
-        apiFetch<{ baseCurrency: string }>("/auth/me"),
+    const activeUser = await getActiveUser();
+
+    if (activeUser) {
+      setUserId(activeUser.id);
+      setBaseCurrency(activeUser.baseCurrency);
+      setQuoteCurrency((current) => current === "USD" ? activeUser.baseCurrency : current);
+
+      const [cached, queued] = await Promise.all([
+        getCachedUserResource<Transaction[]>(activeUser.id, "transactions"),
+        pendingTransactions(activeUser.id),
       ]);
-      setRows(result);
-      setBaseCurrency(user.baseCurrency);
-      setQuoteCurrency((current) => current === "USD" ? user.baseCurrency : current);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to load transactions.");
+
+      if (cached) {
+        setRows(mergeRows(cached.value, queued));
+        setCachedAt(cached.updatedAt);
+      } else {
+        setRows(mergeRows([], queued));
+      }
+      setPending(queued.length);
+    }
+
+    if (!navigator.onLine) {
+      setOffline(true);
+      if (!activeUser) setMessage("No signed-in offline profile is available on this device.");
+      return;
     }
 
     try {
-      setPending((await pendingTransactions()).length);
-    } catch {
-      setPending(0);
+      const [result, user] = await Promise.all([
+        apiFetch<Transaction[]>("/transactions"),
+        apiFetch<UserProfile>("/auth/me"),
+      ]);
+
+      await setActiveUser(user);
+      await cacheUserResource(user.id, "transactions", result);
+      const queued = await pendingTransactions(user.id);
+
+      setUserId(user.id);
+      setRows(mergeRows(result, queued));
+      setPending(queued.length);
+      setBaseCurrency(user.baseCurrency);
+      setQuoteCurrency((current) => current === "USD" ? user.baseCurrency : current);
+      setCachedAt(new Date().toISOString());
+      setOffline(false);
+      setMessage("");
+    } catch (error) {
+      setOffline(isNetworkFailure(error) || !navigator.onLine);
+      if (!activeUser) {
+        setMessage(error instanceof Error ? error.message : "Unable to load transactions.");
+      }
     }
   }, []);
 
   const syncPending = useCallback(async () => {
     if (!navigator.onLine) return;
-    const queued = await pendingTransactions();
+
+    const activeUser = await getActiveUser();
+    if (!activeUser) return;
+
+    const queued = await pendingTransactions(activeUser.id);
 
     for (const row of queued) {
       const id = String(row._offlineId);
-      const { _offlineId, _queuedAt, ...payload } = row;
+      const {
+        _offlineId,
+        _queuedAt,
+        _userId,
+        ...payload
+      } = row;
+
       try {
-        await apiFetch("/transactions", { method: "POST", body: JSON.stringify(payload) });
+        await apiFetch("/transactions", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
         await removePending(id);
-      } catch {
+      } catch (error) {
+        setMessage(
+          error instanceof Error
+            ? `Pending sync stopped: ${error.message}`
+            : "Pending sync stopped because a transaction could not be saved.",
+        );
         break;
       }
     }
@@ -66,10 +157,23 @@ export function TransactionsClient() {
   }, [load]);
 
   useEffect(() => {
-    load();
-    syncPending();
-    window.addEventListener("online", syncPending);
-    return () => window.removeEventListener("online", syncPending);
+    load().then(() => {
+      if (navigator.onLine) syncPending();
+    });
+
+    const onOnline = () => {
+      setOffline(false);
+      syncPending();
+    };
+    const onOffline = () => setOffline(true);
+
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
   }, [load, syncPending]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -106,11 +210,19 @@ export function TransactionsClient() {
       await load();
     } catch (error) {
       const isOffline = !navigator.onLine || (error instanceof Error && error.message === "offline");
+
       if (isOffline) {
-        await queueTransaction(payload);
-        setMessage("Saved offline. It will sync when your connection returns.");
-        form.reset();
-        await load();
+        const activeUser = await getActiveUser();
+        const ownerId = userId || activeUser?.id;
+
+        if (!ownerId) {
+          setMessage("Open the app online once before creating transactions offline.");
+        } else {
+          await queueTransaction(ownerId, payload);
+          setMessage("Saved offline. It will sync when your connection returns.");
+          form.reset();
+          await load();
+        }
       } else {
         setMessage(error instanceof Error ? error.message : "Unable to save transaction.");
       }
@@ -119,9 +231,22 @@ export function TransactionsClient() {
     }
   }
 
-  async function remove(id: string) {
+  async function remove(row: Transaction) {
+    if (row.pending) {
+      await removePending(row.id);
+      setMessage("Pending offline transaction removed.");
+      await load();
+      return;
+    }
+
+    if (!navigator.onLine) {
+      setMessage("Reconnect before deleting a synchronized transaction.");
+      return;
+    }
+
     if (!confirm("Delete this transaction? Portfolio calculations will update immediately.")) return;
-    await apiFetch(`/transactions/${id}`, { method: "DELETE" });
+
+    await apiFetch(`/transactions/${row.id}`, { method: "DELETE" });
     await load();
   }
 
@@ -133,7 +258,14 @@ export function TransactionsClient() {
           <h1>Record the money you actually invested.</h1>
           <p>Every portfolio metric is rebuilt from this ledger.</p>
         </div>
-        {pending > 0 && <span className="status-pill">Pending sync · {pending}</span>}
+        <div className="heading-statuses">
+          {offline && (
+            <span className="status-pill">
+              Offline · cached {cachedAt ? new Date(cachedAt).toLocaleString() : "locally"}
+            </span>
+          )}
+          {pending > 0 && <span className="status-pill">Pending sync · {pending}</span>}
+        </div>
       </div>
 
       <section className="panel transaction-panel">
@@ -231,7 +363,7 @@ export function TransactionsClient() {
           <div className="form-actions field-wide">
             <span className="form-message" aria-live="polite">{message}</span>
             <button className="button button-dark" disabled={busy}>
-              {busy ? "Saving…" : "Save transaction"}
+              {busy ? "Saving…" : offline ? "Save offline" : "Save transaction"}
             </button>
           </div>
         </form>
@@ -241,7 +373,7 @@ export function TransactionsClient() {
         <div className="panel-title">
           <div>
             <span className="eyebrow">History</span>
-            <h2>All transactions</h2>
+            <h2>{offline ? "Cached + pending transactions" : "All transactions"}</h2>
           </div>
           <span className="muted">{rows.length} records</span>
         </div>
@@ -264,11 +396,19 @@ export function TransactionsClient() {
                 <tr key={row.id}>
                   <td>{new Date(row.occurredAt).toLocaleDateString()}</td>
                   <td><strong>{row.assetSymbol}</strong></td>
-                  <td><span className="status-pill subtle">{row.type}</span></td>
+                  <td>
+                    <span className="status-pill subtle">
+                      {row.type}{row.pending ? " · PENDING" : ""}
+                    </span>
+                  </td>
                   <td>{formatMoney(Number(row.amountSpent), row.quoteCurrency)}</td>
                   <td>{Number(row.quantity).toLocaleString(undefined, { maximumFractionDigits: 8 })}</td>
                   <td>{formatMoney(Number(row.unitPrice), row.quoteCurrency)}</td>
-                  <td><button className="table-action" onClick={() => remove(row.id)}>Delete</button></td>
+                  <td>
+                    <button className="table-action" onClick={() => remove(row)}>
+                      {row.pending ? "Remove" : "Delete"}
+                    </button>
+                  </td>
                 </tr>
               ))}
               {!rows.length && (
