@@ -86,6 +86,15 @@ export function calculateAssetPosition(input: LedgerTransaction[]): AssetPositio
       continue;
     }
 
+    if (row.type === "ADJUSTMENT") {
+      if (qty > 0) {
+        quantity += qty;
+        costBasis += Math.max(0, amount) + Math.max(0, fee);
+        totalBuyContributions += Math.max(0, amount) + Math.max(0, fee);
+      }
+      continue;
+    }
+
     if (row.type === "FEE" && qty > 0 && quantity > 0) {
       const removed = Math.min(qty, quantity);
       const averageCost = costBasis / quantity;
