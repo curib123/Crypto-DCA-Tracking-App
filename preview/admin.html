@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>NextFi Control Panel Preview</title>
+  <link rel="stylesheet" href="./preview.css" />
+  <script>
+    (()=>{try{const k="nextfi-preview-theme";const m=localStorage.getItem(k)||"system";const d=m==="dark"||(m==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.dataset.theme=d?"dark":"light"}catch{}})();
+  </script>
+</head>
+<body>
+<div class="preview-banner">DEVELOPMENT UI PREVIEW · MOCK DATA · NO AUTHENTICATION · NOT PRODUCTION</div>
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <a class="brand" href="./index.html"><img src="./nextfi-logo.svg" alt="" /><span>NextFi Control</span></a>
+    <nav class="admin-nav">
+      <a class="active" href="./admin.html">Overview</a>
+      <a href="#users">Users</a>
+      <a href="#ads">AdSense</a>
+      <a href="#cms">Landing CMS</a>
+      <a href="#audit">Audit log</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-toolbar">
+      <div><div class="eyebrow">Secure control panel</div><strong>Development UI preview</strong></div>
+      <div style="display:flex;gap:8px;align-items:center"><div class="theme-switch desktop-only" aria-label="Preview theme">
+  <button data-theme-choice="system">System</button>
+  <button data-theme-choice="light">Light</button>
+  <button data-theme-choice="dark">Dark</button>
+</div><a class="button" href="./index.html">Landing</a></div>
+    </header>
+
+    <div class="admin-content">
+      <div class="page-head">
+        <div><div class="eyebrow">Platform overview</div><h1>Control NextFi without visual clutter.</h1><div class="muted">Mock operational data for responsive UI inspection.</div></div>
+        <span class="pill">Preview only</span>
+      </div>
+
+      <section class="metric-grid">
+        <article class="card metric"><span class="eyebrow">Users</span><strong>1,284</strong><p>Registered accounts</p></article>
+        <article class="card metric"><span class="eyebrow">Active · 7d</span><strong>612</strong><p>Recent sign-ins</p></article>
+        <article class="card metric"><span class="eyebrow">Transactions · 30d</span><strong>8,942</strong><p>Ledger entries</p></article>
+        <article class="card metric"><span class="eyebrow">Suspended</span><strong>3</strong><p>Blocked accounts</p></article>
+      </section>
+
+      <section class="admin-grid" style="margin-top:12px">
+        <article class="card">
+          <div class="panel-title"><div class="eyebrow">30 days</div><h2>User growth</h2></div>
+          <div class="panel-body"><div class="chart"><span style="height:26%"></span><span style="height:33%"></span><span style="height:39%"></span><span style="height:51%"></span><span style="height:63%"></span><span style="height:72%"></span><span style="height:84%"></span></div></div>
+        </article>
+        <article class="card" id="ads">
+          <div class="panel-title"><div class="eyebrow">Monetization</div><h2>AdSense policy</h2></div>
+          <div class="panel-body toggle-list">
+            <div class="toggle"><span>Master ad serving</span><b>OFF</b></div>
+            <div class="toggle"><span>Signed-in app ads</span><b>OFF</b></div>
+            <div class="toggle"><span>Landing-page ads</span><b>OFF</b></div>
+            <div class="toggle"><span>Default users</span><b>SELECTED ONLY</b></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="card" id="users" style="margin-top:12px">
+        <div class="panel-title"><div class="eyebrow">User management</div><h2>Accounts</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Base</th><th>Ads</th><th>Last login</th></tr></thead>
+            <tbody>
+              <tr><td><strong>alex@example.com</strong></td><td>User</td><td>Active</td><td>USD</td><td>Inherit</td><td>2 min ago</td></tr>
+              <tr><td><strong>maria@example.com</strong></td><td>User</td><td>Active</td><td>PHP</td><td>Force off</td><td>1 hr ago</td></tr>
+              <tr><td><strong>dev@example.com</strong></td><td>User</td><td>Active</td><td>USD</td><td>Force on</td><td>Yesterday</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-grid" style="margin-top:12px">
+        <article class="card" id="cms">
+          <div class="panel-title"><div class="eyebrow">Landing CMS</div><h2>Public content</h2></div>
+          <div class="panel-body">
+            <div class="preview-note" style="margin:0">Hero copy, feature blocks, FAQ, SEO metadata and footer content remain editable from the real control panel.</div>
+          </div>
+        </article>
+        <article class="card" id="audit">
+          <div class="panel-title"><div class="eyebrow">Security</div><h2>Audit log</h2></div>
+          <div class="panel-body">
+            <div style="display:grid;gap:10px;font-size:12px">
+              <div><strong>adsense.settings.update</strong><div class="muted">admin · 09:42</div></div>
+              <div><strong>user.update</strong><div class="muted">admin · 09:31</div></div>
+              <div><strong>landing.update</strong><div class="muted">admin · 09:18</div></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <div class="preview-note">No control-panel authentication was removed from the real application. This GitHub Pages version is a separate static showcase containing mock data only.</div>
+    </div>
+  </main>
+</div>
+<script src="./preview.js"></script>
+</body></html>
