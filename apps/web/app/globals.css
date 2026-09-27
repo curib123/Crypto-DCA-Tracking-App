@@ -1901,3 +1901,176 @@ html[data-theme="dark"] textarea {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* NEXTFI THEME QA OVERRIDES */
+textarea {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auth-page {
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--surface) 92%, transparent) 0, transparent 42%),
+    var(--bg);
+}
+
+.stack-form label,
+.transaction-form label,
+.inline-select {
+  color: var(--muted);
+}
+
+input,
+select,
+textarea {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--muted);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
+  outline: none;
+}
+
+.auth-switch,
+.auth-status {
+  color: var(--muted);
+}
+
+.auth-switch a {
+  color: var(--ink);
+}
+
+.form-error {
+  background: color-mix(in srgb, var(--negative) 10%, var(--surface));
+}
+
+.app-frame {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app-topbar {
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+}
+
+.app-loading,
+.page-heading p,
+.metric-card p,
+.muted,
+.form-message,
+.market-symbol span:last-child,
+.empty-cell,
+.empty-state,
+.market-foot,
+.skeleton-card {
+  color: var(--muted);
+}
+
+.page-heading .status-pill,
+.status-pill {
+  color: var(--muted);
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.panel,
+.skeleton-card {
+  background: var(--surface);
+}
+
+th,
+td {
+  border-bottom-color: var(--line);
+}
+
+th {
+  color: var(--muted);
+}
+
+.table-action {
+  color: var(--muted);
+}
+
+.table-action:hover,
+.empty-state h2 {
+  color: var(--ink);
+}
+
+.market-symbol .coin-dot {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* Keep the marketing preview deliberately monochrome/dark in both themes. */
+.product-preview {
+  background: #080808;
+  color: #ffffff;
+  border-color: #202020;
+}
+
+.product-preview .nextfi-logo {
+  color: #ffffff;
+}
+
+.product-preview .eyebrow,
+.preview-stats span,
+.preview-position span {
+  color: rgba(255,255,255,.52);
+}
+
+.preview-bars {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.10);
+}
+
+.preview-bars span {
+  background: #ffffff;
+}
+
+.preview-chip {
+  color: #ffffff;
+  border-color: rgba(255,255,255,.15);
+  background: rgba(255,255,255,.08);
+}
+
+.admin-sidebar .app-nav a {
+  color: var(--muted);
+}
+
+.admin-sidebar .app-nav a:hover,
+.admin-sidebar .app-nav a.active {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.admin-sidebar .sidebar-foot {
+  border-top-color: var(--line);
+  color: var(--muted);
+}
+
+.admin-sidebar .nextfi-logo {
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .mobile-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-color: var(--line);
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+  }
+
+  .mobile-nav a {
+    color: var(--muted);
+  }
+
+  .mobile-nav a.active {
+    color: var(--bg);
+    background: var(--ink);
+  }
+}
