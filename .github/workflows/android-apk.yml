@@ -9,6 +9,7 @@ on:
       - "apps/web/components/install-button.tsx"
       - "apps/web/package.json"
       - "package.json"
+      - "pnpm-workspace.yaml"
       - ".github/workflows/android-apk.yml"
   workflow_dispatch:
     inputs:
@@ -47,12 +48,10 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Generate Android project
-        working-directory: apps/mobile
-        run: pnpm exec cap add android
+        run: pnpm --filter @crypto-dca/mobile android:init
 
       - name: Sync Capacitor plugins and config
-        working-directory: apps/mobile
-        run: pnpm exec cap sync android
+        run: pnpm --filter @crypto-dca/mobile android:sync
 
       - name: Build installable debug APK
         working-directory: apps/mobile/android
