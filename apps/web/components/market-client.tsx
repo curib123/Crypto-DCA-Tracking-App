@@ -51,10 +51,24 @@ export function MarketClient() {
         if (!response.ok) throw new Error("Market request failed");
 
         const data = (await response.json()) as MarketSnapshot;
+        const freshRows = Object.values(data.prices || {});
+
+        if (!freshRows.length) {
+          if (mounted) {
+            setOffline(Boolean(cached));
+            if (!cached) {
+              setRows([]);
+              setSource(data.source || "Unavailable");
+              setUpdatedAt(data.fetchedAt || null);
+            }
+          }
+          return;
+        }
+
         await cacheMarket(currency, data);
 
         if (mounted) {
-          setRows(Object.values(data.prices || {}));
+          setRows(freshRows);
           setSource(data.source || "Unknown");
           setUpdatedAt(data.fetchedAt || new Date().toISOString());
           setOffline(false);
