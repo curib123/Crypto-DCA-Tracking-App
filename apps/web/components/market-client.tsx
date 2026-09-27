@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { API_URL, formatMoney } from "@/lib/api";
 import { cacheMarket, getCachedMarket } from "@/lib/offline";
+import { CoinAvatar } from "@/components/ui/coin-avatar";
+import { AppModal } from "@/components/ui/app-modal";
+import { getCryptoMeta } from "@/lib/crypto-meta";
 
 type PriceRow = {
   symbol: string;
@@ -24,6 +27,7 @@ export function MarketClient() {
   const [source, setSource] = useState("Loading…");
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
+  const [selected, setSelected] = useState<PriceRow | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -33,10 +37,7 @@ export function MarketClient() {
 
       if (cached && mounted) {
         const cachedRows = Object.values(cached.value.prices || {});
-        const providerTimestamp = Math.max(
-          0,
-          ...cachedRows.map((row) => Number(row.lastUpdatedAt || 0)),
-        );
+        const providerTimestamp = Math.max(0, ...cachedRows.map((row) => Number(row.lastUpdatedAt || 0)));
         setRows(cachedRows);
         setSource(cached.value.source || "Cached market data");
         setUpdatedAt(
@@ -78,10 +79,7 @@ export function MarketClient() {
         await cacheMarket(currency, data);
 
         if (mounted) {
-          const providerTimestamp = Math.max(
-            0,
-            ...freshRows.map((row) => Number(row.lastUpdatedAt || 0)),
-          );
+          const providerTimestamp = Math.max(0, ...freshRows.map((row) => Number(row.lastUpdatedAt || 0)));
           setRows(freshRows);
           setSource(data.source || "Unknown");
           setUpdatedAt(
@@ -103,9 +101,9 @@ export function MarketClient() {
       }
     }
 
-    load();
+    void load();
 
-    const onOnline = () => load();
+    const onOnline = () => void load();
     const onOffline = () => setOffline(true);
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
@@ -122,11 +120,11 @@ export function MarketClient() {
       <div className="page-heading">
         <div>
           <span className="eyebrow">Market</span>
-          <h1>Prices for context, not impulse.</h1>
+          <h1>Market context without the noise.</h1>
           <p>
             {offline
               ? "Showing the last synchronized market snapshot."
-              : "Compare the market with your own average entry on the Overview screen."}
+              : "Use current prices as context beside your real cost basis and DCA history."}
           </p>
         </div>
         <div className="heading-statuses">
@@ -143,21 +141,24 @@ export function MarketClient() {
       </div>
 
       <section className="market-grid">
-        {rows.map((row) => (
-          <article className="panel market-card" key={row.symbol}>
-            <div className="market-symbol">
-              <span className="coin-dot">{row.symbol.slice(0, 1)}</span>
-              <div>
-                <strong>{row.symbol}</strong>
-                <span>{row.currency}</span>
+        {rows.map((row) => {
+          const meta = getCryptoMeta(row.symbol);
+          return (
+            <button type="button" className="panel market-card market-card-button" key={row.symbol} onClick={() => setSelected(row)}>
+              <div className="market-symbol">
+                <CoinAvatar symbol={row.symbol} size={42} />
+                <div>
+                  <strong>{meta.name}</strong>
+                  <span>{row.symbol} · {row.currency}</span>
+                </div>
               </div>
-            </div>
-            <strong className="market-price">{formatMoney(row.price, row.currency)}</strong>
-            <span className={row.change24h >= 0 ? "gain" : "loss"}>
-              {row.change24h >= 0 ? "+" : ""}{row.change24h.toFixed(2)}% · 24h
-            </span>
-          </article>
-        ))}
+              <strong className="market-price">{formatMoney(row.price, row.currency)}</strong>
+              <span className={row.change24h >= 0 ? "gain" : "loss"}>
+                {row.change24h >= 0 ? "▲" : "▼"} {Math.abs(row.change24h).toFixed(2)}% · 24h
+              </span>
+            </button>
+          );
+        })}
       </section>
 
       {!rows.length && (
@@ -172,6 +173,49 @@ export function MarketClient() {
         {updatedAt ? ` · last updated ${new Date(updatedAt).toLocaleString()}` : ""}
         {offline ? " · offline" : ""}
       </p>
+
+      {selected && (
+        <AppModal
+          open={Boolean(selected)}
+          title={getCryptoMeta(selected.symbol).name}
+          eyebrow={`${selected.symbol} · Market information`}
+          description={getCryptoMeta(selected.symbol).category}
+          onClose={() => setSelected(null)}
+          size="md"
+          footer={
+            <button type="button" className="button button-dark" onClick={() => {
+              window.dispatchEvent(new CustomEvent("nextfi-open-transaction", { detail: { asset: selected.symbol } }));
+              setSelected(null);
+            }}>
+              Add {selected.symbol} transaction
+            </button>
+          }
+        >
+          <div className="market-detail">
+            <div className="asset-detail-hero">
+              <CoinAvatar symbol={selected.symbol} size={64} />
+              <div>
+                <strong>{formatMoney(selected.price, selected.currency)}</strong>
+                <span className={selected.change24h >= 0 ? "gain" : "loss"}>
+                  {selected.change24h >= 0 ? "▲" : "▼"} {Math.abs(selected.change24h).toFixed(2)}% in 24h
+                </span>
+              </div>
+            </div>
+            <section className="asset-about">
+              <span className="eyebrow">About {getCryptoMeta(selected.symbol).name}</span>
+              <p>{getCryptoMeta(selected.symbol).about}</p>
+              <div className="asset-meta-list">
+                <div><span>Network</span><strong>{getCryptoMeta(selected.symbol).network}</strong></div>
+                <div><span>Category</span><strong>{getCryptoMeta(selected.symbol).category}</strong></div>
+              </div>
+              <div className="asset-links">
+                {getCryptoMeta(selected.symbol).website && <a href={getCryptoMeta(selected.symbol).website} target="_blank" rel="noopener noreferrer">Official website ↗</a>}
+                {getCryptoMeta(selected.symbol).explorer && <a href={getCryptoMeta(selected.symbol).explorer} target="_blank" rel="noopener noreferrer">Explorer ↗</a>}
+              </div>
+            </section>
+          </div>
+        </AppModal>
+      )}
     </div>
   );
 }
