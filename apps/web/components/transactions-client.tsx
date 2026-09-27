@@ -73,6 +73,7 @@ export function TransactionsClient() {
     const form = event.currentTarget;
     const data = new FormData(form);
     const payload = {
+      clientReference: crypto.randomUUID(),
       assetSymbol: String(data.get("assetSymbol")),
       type: String(data.get("type")),
       quantity: Number(data.get("quantity")),
