@@ -347,6 +347,7 @@ textarea:focus {
 
 table {
   width: 100%;
+  min-width: 680px;
   border-collapse: collapse;
   white-space: nowrap;
 }
@@ -472,6 +473,11 @@ table select {
 
 .google-button {
   min-height: 46px;
+}
+
+.google-button.is-busy {
+  opacity: .58;
+  pointer-events: none;
 }
 
 .control-login-card {
