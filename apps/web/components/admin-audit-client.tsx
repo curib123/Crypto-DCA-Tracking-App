@@ -10,7 +10,7 @@ type AuditRow = {
   targetId: string | null;
   metadata: Record<string, unknown> | null;
   createdAt: string;
-  actor: { email: string; name: string | null };
+  actor: { username: string };
 };
 
 export function AdminAuditClient() {
@@ -42,7 +42,7 @@ export function AdminAuditClient() {
               {rows.map((row) => (
                 <tr key={row.id}>
                   <td>{new Date(row.createdAt).toLocaleString()}</td>
-                  <td><strong>{row.actor.name || row.actor.email}</strong><small>{row.actor.email}</small></td>
+                  <td><strong>{row.actor.username}</strong></td>
                   <td>{row.action}</td>
                   <td>{row.targetType}{row.targetId ? ` · ${row.targetId.slice(0, 8)}` : ""}</td>
                   <td><code className="audit-json">{row.metadata ? JSON.stringify(row.metadata) : "—"}</code></td>
