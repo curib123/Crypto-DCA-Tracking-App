@@ -1,16 +1,18 @@
 import { PrismaClient, TransactionType } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   const email = "demo@example.com";
-  const passwordHash = await bcrypt.hash("demo12345", 12);
-
   const user = await prisma.user.upsert({
     where: { email },
     update: {},
-    create: { email, passwordHash, baseCurrency: "USD" },
+    create: {
+      googleSubject: "seed:demo-user",
+      email,
+      name: "Demo User",
+      baseCurrency: "USD",
+    },
   });
 
   const count = await prisma.transaction.count({ where: { userId: user.id } });
@@ -60,7 +62,7 @@ async function main() {
     });
   }
 
-  console.log("Demo account: demo@example.com / demo12345");
+  console.log("Demo data seeded. Production authentication remains Google-only.");
 }
 
 main().finally(() => prisma.$disconnect());
