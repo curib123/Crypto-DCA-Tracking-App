@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_URL, formatMoney } from "@/lib/api";
+import { API_URL, apiFetch, formatMoney } from "@/lib/api";
 import { cacheMarket, getCachedMarket } from "@/lib/offline";
 import { CoinAvatar } from "@/components/ui/coin-avatar";
 import { AppModal } from "@/components/ui/app-modal";
@@ -21,6 +21,26 @@ type MarketSnapshot = {
   fetchedAt: string;
 };
 
+type MarketAssetDetail = {
+  symbol: string;
+  currency: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+  volume24h: number;
+  high24h: number;
+  low24h: number;
+  circulatingSupply: number;
+  totalSupply: number | null;
+  maxSupply: number | null;
+  marketCapRank: number | null;
+  lastUpdated: string | null;
+};
+
+function compactNumber(value: number) {
+  return new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 2 }).format(value);
+}
+
 export function MarketClient() {
   const [currency, setCurrency] = useState("USD");
   const [rows, setRows] = useState<PriceRow[]>([]);
@@ -28,6 +48,8 @@ export function MarketClient() {
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
   const [selected, setSelected] = useState<PriceRow | null>(null);
+  const [detail, setDetail] = useState<MarketAssetDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -115,6 +137,21 @@ export function MarketClient() {
     };
   }, [currency]);
 
+  async function openAsset(row: PriceRow) {
+    setSelected(row);
+    setDetail(null);
+    setDetailLoading(true);
+    try {
+      setDetail(await apiFetch<MarketAssetDetail>(
+        `/market/assets/${encodeURIComponent(row.symbol)}?currency=${encodeURIComponent(row.currency)}`,
+      ));
+    } catch {
+      setDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
   return (
     <div className="app-page">
       <div className="page-heading">
@@ -144,7 +181,7 @@ export function MarketClient() {
         {rows.map((row) => {
           const meta = getCryptoMeta(row.symbol);
           return (
-            <button type="button" className="panel market-card market-card-button" key={row.symbol} onClick={() => setSelected(row)}>
+            <button type="button" className="panel market-card market-card-button" key={row.symbol} onClick={() => void openAsset(row)}>
               <div className="market-symbol">
                 <CoinAvatar symbol={row.symbol} size={42} />
                 <div>
@@ -201,6 +238,19 @@ export function MarketClient() {
                 </span>
               </div>
             </div>
+            {detailLoading && <div className="skeleton-card compact-skeleton">Loading market details…</div>}
+            {detail && (
+              <section className="market-detail-grid">
+                <div><span>Market cap</span><strong>{formatMoney(detail.marketCap, detail.currency)}</strong></div>
+                <div><span>24h volume</span><strong>{formatMoney(detail.volume24h, detail.currency)}</strong></div>
+                <div><span>24h high</span><strong>{formatMoney(detail.high24h, detail.currency)}</strong></div>
+                <div><span>24h low</span><strong>{formatMoney(detail.low24h, detail.currency)}</strong></div>
+                <div><span>Circulating supply</span><strong>{compactNumber(detail.circulatingSupply)} {detail.symbol}</strong></div>
+                <div><span>Max supply</span><strong>{detail.maxSupply ? compactNumber(detail.maxSupply) + " " + detail.symbol : "No fixed max"}</strong></div>
+                {detail.marketCapRank && <div><span>Market cap rank</span><strong>#{detail.marketCapRank}</strong></div>}
+                {detail.lastUpdated && <div><span>Market updated</span><strong>{new Date(detail.lastUpdated).toLocaleString()}</strong></div>}
+              </section>
+            )}
             <section className="asset-about">
               <span className="eyebrow">About {getCryptoMeta(selected.symbol).name}</span>
               <p>{getCryptoMeta(selected.symbol).about}</p>
