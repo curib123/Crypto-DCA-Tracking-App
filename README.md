@@ -157,7 +157,7 @@ After deployment, add the domain to Google Search Console, submit `/sitemap.xml`
 The default project is intentionally designed to run without a paid SaaS dependency:
 
 - Next.js, NestJS, PostgreSQL, Prisma, Caddy, Docker, and pnpm are used without a required paid service.
-- Market prices use CoinGecko's Demo/Keyless endpoint; no Pro API key is required.
+- Market prices use CoinGecko's $0 Demo/public API path; no paid CoinGecko plan is required. A free Demo key is recommended for authenticated quota access, while the app can attempt public/keyless access and falls back safely when market data is unavailable.
 - The default runtime does not require Redis, a managed database, a paid auth service, an email provider, analytics, ads, or a payment gateway.
 - GitHub Actions is used only for repository CI; this repository is public.
 - Oracle Cloud Always Free can host the Docker stack when your tenancy has eligible capacity and you remain inside the current Always Free limits.
@@ -208,8 +208,16 @@ APP_DOMAIN=dca.example.com
 POSTGRES_DB=crypto_dca
 POSTGRES_USER=crypto_dca
 POSTGRES_PASSWORD=<strong-random-password>
-JWT_SECRET=<long-random-secret>
+JWT_SECRET=<long-random-secret-at-least-32-characters>
 ```
+
+Optional but recommended for live market data:
+
+```
+COINGECKO_DEMO_API_KEY=<free-demo-key>
+```
+
+CoinGecko's Demo plan is $0/month. The key must stay server-side and is never exposed to the PWA.
 
 Point the domain's DNS A/AAAA record to the VM before starting Caddy. For a zero-cost setup, a free DuckDNS subdomain can be used instead of purchasing a domain.
 
@@ -233,6 +241,8 @@ The production API runs the checked-in Prisma migrations before starting.
 ## Security baseline
 
 - Passwords are hashed with bcrypt
+- Production refuses to start with a missing/short JWT secret
+- Authentication endpoints and the API have in-memory rate limiting
 - JWT sessions are stored in HttpOnly, SameSite cookies rather than browser localStorage
 - JWT-protected portfolio/transaction routes
 - DTO validation and unknown-field rejection
@@ -247,7 +257,7 @@ Before a public commercial launch, add refresh-token rotation, email verificatio
 
 ## Market data
 
-The API uses CoinGecko's **Demo/Keyless** simple-price endpoint, so no paid market-data key is required. A 60-second in-memory cache reduces calls to the free endpoint. Supported assets:
+The API uses CoinGecko's free **Demo/public** simple-price endpoint. No paid market-data plan is required. If `COINGECKO_DEMO_API_KEY` is configured, the API sends it only from the backend; otherwise it attempts public/keyless access. A 60-second in-memory cache reduces calls, and portfolio calculations fall back to the last recorded entry price if market data is unavailable. Supported assets:
 
 - BTC
 - ETH
