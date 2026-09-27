@@ -490,3 +490,71 @@ table select {
     transition: none !important;
   }
 }
+
+
+/* FinTech interaction primitives */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.button-danger {
+  color: #fff;
+  background: var(--negative);
+  border-color: var(--negative);
+}
+
+.button-danger:hover:not(:disabled) {
+  filter: brightness(.95);
+}
+
+.icon-button,
+.account-button,
+.balance-toggle,
+.modal-close,
+.activity-more,
+.drawer-links button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--surface);
+}
+
+.coin-avatar {
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 72%, transparent);
+}
+
+.coin-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.coin-avatar-fallback {
+  color: var(--inverse-ink);
+  background: var(--inverse);
+  font-size: 11px;
+  font-weight: 800;
+}
