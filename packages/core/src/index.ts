@@ -121,3 +121,62 @@ export function percentageChange(current: number, basis: number): number {
   if (!basis) return 0;
   return ((current - basis) / basis) * 100;
 }
+
+
+export interface LedgerValidation {
+  valid: boolean;
+  reason?: string;
+}
+
+export function validateAssetLedger(input: LedgerTransaction[]): LedgerValidation {
+  const rows = [...input].sort(
+    (a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime(),
+  );
+
+  let quantity = 0;
+  const epsilon = 1e-12;
+
+  for (const row of rows) {
+    const qty = Number(row.quantity) || 0;
+
+    if (qty < 0) {
+      return { valid: false, reason: "Ledger quantities cannot be negative." };
+    }
+
+    if (
+      row.type === "BUY" ||
+      row.type === "AIRDROP" ||
+      row.type === "REWARD" ||
+      row.type === "STAKING_REWARD" ||
+      row.type === "ADJUSTMENT"
+    ) {
+      quantity += qty;
+      continue;
+    }
+
+    if (row.type === "SELL") {
+      if (qty > quantity + epsilon) {
+        return {
+          valid: false,
+          reason: `Sell quantity ${qty} exceeds the ${quantity} available at that point in the ledger.`,
+        };
+      }
+      quantity = Math.max(0, quantity - qty);
+      continue;
+    }
+
+    if (row.type === "FEE" && qty > 0) {
+      if (qty > quantity + epsilon) {
+        return {
+          valid: false,
+          reason: `Asset-denominated fee ${qty} exceeds the ${quantity} available at that point in the ledger.`,
+        };
+      }
+      quantity = Math.max(0, quantity - qty);
+    }
+
+    // Transfers are custody/location events and are neutral in an aggregate portfolio ledger.
+  }
+
+  return { valid: true };
+}
