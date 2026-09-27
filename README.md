@@ -120,11 +120,30 @@ For a purchase already denominated in the user's base currency, use an FX rate o
 
 ## PWA behavior
 
-The public shell and static assets are cached by the service worker.
+The PWA now supports offline reading after the user has synchronized online at least once.
 
-Authenticated API responses are intentionally **not** cached by the service worker.
+Cached in IndexedDB per user:
 
-When a transaction is entered without connectivity, the web app stores it in IndexedDB. Pending transactions are synchronized when the browser returns online.
+- last synchronized portfolio summary
+- last synchronized transaction ledger
+- pending offline transactions
+- last synchronized market snapshot per display currency
+- non-secret active-user identity needed to unlock that user's local cache
+
+The service worker caches the public/app navigation shell and static assets needed to reopen previously used app screens without a network connection.
+
+Offline behavior:
+
+- Portfolio remains readable using the last synchronized snapshot.
+- Transactions remain readable, and new transactions can be queued offline.
+- Pending offline transactions are shown in the ledger and sync automatically when connectivity returns.
+- Pending transactions are intentionally **not** included in cached portfolio totals until the server accepts them; the dashboard shows that state clearly.
+- Market displays the last synchronized prices with an explicit stale/offline timestamp.
+- Synchronized transaction deletion requires connectivity because ledger integrity must be checked by the server.
+- Authentication secrets are never stored in IndexedDB. The JWT remains in an HttpOnly cookie.
+- Signing out, or receiving a confirmed 401 session-expired response while online, clears that user's cached financial data from the device.
+
+Authenticated API responses are not placed in the service-worker HTTP cache. Private financial data lives only in the per-user IndexedDB cache used by the application.
 
 ## SEO implementation
 
