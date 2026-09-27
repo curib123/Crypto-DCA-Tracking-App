@@ -6,14 +6,8 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
 import { ThemeControl } from "@/components/theme-control";
-
-const links = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/ads", label: "AdSense" },
-  { href: "/admin/content", label: "Landing CMS" },
-  { href: "/admin/audit", label: "Audit log" },
-];
+import { NavIcon } from "@/components/ui/nav-icon";
+import { CONTROL_NAVIGATION } from "@/config/navigation";
 
 type ControlAdmin = {
   id: string;
@@ -81,15 +75,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav className="app-nav" aria-label="Control panel navigation">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={pathname === link.href ? "active" : undefined}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {CONTROL_NAVIGATION.map((link) => {
+            const active = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={active ? "active" : undefined}
+                aria-current={active ? "page" : undefined}
+              >
+                <span className="nav-icon"><NavIcon name={link.icon} /></span>
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="sidebar-foot">

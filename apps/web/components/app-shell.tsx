@@ -7,6 +7,8 @@ import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
 import { applyTheme, ThemeControl } from "@/components/theme-control";
 import { AdSenseSlot } from "@/components/adsense-slot";
+import { NavIcon } from "@/components/ui/nav-icon";
+import { APP_NAVIGATION } from "@/config/navigation";
 import {
   clearActiveUser,
   clearLogoutPending,
@@ -18,14 +20,6 @@ import {
   removePending,
   setActiveUser,
 } from "@/lib/offline";
-
-const links = [
-  { href: "/app", label: "Overview" },
-  { href: "/app/transactions", label: "Transactions" },
-  { href: "/app/market", label: "Market" },
-  { href: "/app/insights", label: "AI Insights" },
-  { href: "/app/settings", label: "Settings" },
-];
 
 type SessionUser = {
   id: string;
@@ -62,15 +56,20 @@ function AppNavLink({
   href,
   className,
   offline,
+  active = false,
   children,
 }: {
   href: string;
   className?: string;
   offline: boolean;
+  active?: boolean;
   children: React.ReactNode;
 }) {
-  if (offline) return <a href={href} className={className}>{children}</a>;
-  return <Link href={href} className={className}>{children}</Link>;
+  const ariaCurrent = active ? "page" : undefined;
+  if (offline) {
+    return <a href={href} className={className} aria-current={ariaCurrent}>{children}</a>;
+  }
+  return <Link href={href} className={className} aria-current={ariaCurrent}>{children}</Link>;
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -78,7 +77,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [offline, setOffline] = useState(false);
-  const [user, setUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -87,7 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (!navigator.onLine) return;
       try {
         if ("serviceWorker" in navigator) await navigator.serviceWorker.ready;
-        links.forEach((link) => router.prefetch(link.href));
+        APP_NAVIGATION.forEach((link) => router.prefetch(link.href));
       } catch {
         // Prefetch is an optimization only.
       }
@@ -120,7 +118,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         await syncOfflineQueue(nextUser.id);
 
         if (mounted) {
-          setUser(nextUser);
           setOffline(false);
           setReady(true);
         }
@@ -197,16 +194,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </AppNavLink>
 
         <nav className="app-nav" aria-label="Application navigation">
-          {links.map((link) => (
-            <AppNavLink
-              key={link.href}
-              href={link.href}
-              offline={offline}
-              className={pathname === link.href ? "active" : undefined}
-            >
-              {link.label}
-            </AppNavLink>
-          ))}
+          {APP_NAVIGATION.map((link) => {
+            const active = pathname === link.href;
+            return (
+              <AppNavLink
+                key={link.href}
+                href={link.href}
+                offline={offline}
+                className={active ? "active" : undefined}
+                active={active}
+              >
+                <span className="nav-icon"><NavIcon name={link.icon} /></span>
+                <span>{link.label}</span>
+              </AppNavLink>
+            );
+          })}
         </nav>
 
         <div className="sidebar-foot">
@@ -234,16 +236,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="mobile-nav" aria-label="Mobile application navigation">
-        {links.slice(0, 4).map((link) => (
-          <AppNavLink
-            key={link.href}
-            href={link.href}
-            offline={offline}
-            className={pathname === link.href ? "active" : undefined}
-          >
-            {link.label === "Transactions" ? "Ledger" : link.label === "AI Insights" ? "Insights" : link.label}
-          </AppNavLink>
-        ))}
+        {APP_NAVIGATION.map((link) => {
+          const active = pathname === link.href;
+          return (
+            <AppNavLink
+              key={link.href}
+              href={link.href}
+              offline={offline}
+              className={active ? "active" : undefined}
+              active={active}
+            >
+              <NavIcon name={link.icon} size={18} />
+              <span>{link.mobileLabel || link.label}</span>
+            </AppNavLink>
+          );
+        })}
       </nav>
     </div>
   );
