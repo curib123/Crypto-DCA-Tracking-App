@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { UserRole } from "@prisma/client";
 import { PrismaService } from "../../infrastructure/database/prisma.service";
@@ -98,6 +98,10 @@ export class AuthService {
           ...(bootstrapAdmin ? { role: UserRole.ADMIN } : {}),
         },
       });
+    }
+
+    if (user.status !== "ACTIVE") {
+      throw new ForbiddenException("This account is suspended.");
     }
 
     return {
