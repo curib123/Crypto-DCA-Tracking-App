@@ -1,9 +1,11 @@
-const CACHE = "nextfi-shell-v3";
+const CACHE = "nextfi-shell-v4";
 const PUBLIC_SHELL = [
   "/",
   "/offline",
   "/app",
+  "/app/portfolio",
   "/app/transactions",
+  "/app/dca-plans",
   "/app/market",
   "/app/insights",
   "/app/settings",
@@ -11,6 +13,13 @@ const PUBLIC_SHELL = [
   "/icon-192.png",
   "/icon-512.png",
   "/maskable-512.png",
+  "/crypto/btc.svg",
+  "/crypto/eth.svg",
+  "/crypto/sol.svg",
+  "/crypto/bnb.svg",
+  "/crypto/link.svg",
+  "/crypto/hype.svg",
+  "/crypto/xlm.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -55,7 +64,8 @@ self.addEventListener("fetch", (event) => {
   if (
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icon") ||
-    url.pathname.startsWith("/maskable")
+    url.pathname.startsWith("/maskable") ||
+    url.pathname.startsWith("/crypto/")
   ) {
     event.respondWith(
       caches.match(request).then((cached) =>
