@@ -1789,3 +1789,16 @@
   justify-content: center;
   gap: 8px;
 }
+
+.market-card-button {
+  width: 100%;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.market-card-button:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
+}
