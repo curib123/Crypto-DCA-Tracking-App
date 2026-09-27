@@ -17,10 +17,19 @@ import { TransactionsController, TransactionsService } from "./transactions";
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>("JWT_SECRET") || "dev-only-change-me",
-        signOptions: { expiresIn: "7d" },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>("JWT_SECRET");
+        const production = config.get<string>("NODE_ENV") === "production";
+
+        if (production && (!secret || secret.length < 32)) {
+          throw new Error("JWT_SECRET must be set to at least 32 characters in production.");
+        }
+
+        return {
+          secret: secret || "dev-only-change-me",
+          signOptions: { expiresIn: "7d" },
+        };
+      },
     }),
   ],
   controllers: [
