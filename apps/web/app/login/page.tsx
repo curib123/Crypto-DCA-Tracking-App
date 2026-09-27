@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GoogleSignIn } from "@/components/google-sign-in";
+import { NextFiLogo } from "@/components/nextfi-logo";
+import { ThemeControl } from "@/components/theme-control";
 
 export const metadata: Metadata = {
   title: "Sign in with Google",
@@ -12,21 +14,24 @@ export default function LoginPage() {
     <main className="auth-page">
       <div className="auth-card">
         <div className="auth-heading">
-          <Link href="/" className="brand">
-            <span className="brand-mark">D</span>
-            <span>Crypto DCA</span>
-          </Link>
+          <div className="auth-brand-row">
+            <Link href="/" className="brand">
+              <NextFiLogo />
+              <span>NextFi</span>
+            </Link>
+            <ThemeControl compact />
+          </div>
           <p className="eyebrow">Secure account access</p>
           <h1>Continue with Google.</h1>
           <p>
-            One Google account, one portfolio workspace. No app password to create or store.
+            One Google account, one private portfolio workspace. No application password to create or store.
           </p>
         </div>
 
         <GoogleSignIn />
 
         <p className="auth-switch">
-          By continuing, you use Google only for identity. Crypto DCA never asks for wallet seed phrases or private keys.
+          Google is used for identity only. NextFi never asks for wallet seed phrases or private keys.
         </p>
       </div>
     </main>

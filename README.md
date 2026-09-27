@@ -1,10 +1,15 @@
-# Crypto DCA Tracking App
+# NextFi — Crypto DCA Tracking App
 
-A mobile-first Progressive Web App for tracking real crypto DCA contributions, weighted average entry price, break-even, fees, current value, and realized/unrealized profit or loss.
+A mobile-first Progressive Web App for tracking real crypto DCA contributions, weighted average cost, break-even, fees, current value, and realized/unrealized profit or loss. NextFi includes an admin control panel, CMS-managed landing content, system-aware light/dark themes, Chart.js analytics, and optional AI-assisted portfolio explanations.
 
 ## What is implemented
 
-- Modern black-and-white SaaS landing page
+- Modern black-and-white SaaS landing page using the NextFi brand
+- System / Light / Dark themes; System follows `prefers-color-scheme` automatically
+- Admin-managed landing copy, features, FAQ, footer, and SEO metadata
+- Theme-aware Chart.js portfolio and admin analytics
+- Optional AI-assisted portfolio explanations backed by deterministic ledger calculations
+- Admin dashboard, user management, suspension controls, RBAC, and audit log
 - Installable PWA manifest + service worker
 - Google-friendly metadata, canonical URL, robots, sitemap, FAQ JSON-LD, and SoftwareApplication JSON-LD
 - Google Identity Services sign-in only; no application password database
@@ -35,9 +40,13 @@ apps/
         database/
         rate-limit/
       modules/
+        admin/
+        ai/
         auth/
+        content/
         market/
         portfolio/
+        settings/
         transactions/
 
 packages/
@@ -65,7 +74,7 @@ Live market price
 Current value / unrealized P&L
 ```
 
-Controllers do not own financial calculation logic. The reusable weighted-cost engine lives in `packages/core`.
+Controllers do not own financial calculation logic. The reusable weighted-cost engine lives in `packages/core`. AI never calculates cost basis, P/L, or holdings; it receives a derived analytics context and is limited to explaining the already-calculated numbers.
 
 The NestJS app is separated into feature modules and infrastructure adapters. Market data is accessed through a provider port so CoinGecko can be replaced without changing portfolio logic.
 
@@ -137,6 +146,41 @@ The backend verifies every Google ID token and persists Google's stable `sub` cl
 
 This selected ID-token flow does **not** require a Google client secret in the repository or Docker environment.
 
+
+## Admin access
+
+Admin authorization is enforced on the API, not only in the UI. Bootstrap one or more administrators with a comma-separated list of verified Google account emails:
+
+```
+ADMIN_EMAILS=you@example.com,second-admin@example.com
+```
+
+After an account receives the `ADMIN` role, the NextFi app exposes the Admin link. The admin control panel includes:
+
+- user growth and recent activity analytics
+- transaction activity and popular-asset charts
+- searchable/paginated user management
+- activate/suspend and USER/ADMIN role controls
+- landing-page CMS and SEO fields
+- administrator audit logs
+
+An admin cannot suspend or demote their own account through the control panel. Suspended users are rejected at sign-in and by authenticated API guards.
+
+## AI insights
+
+NextFi works with **no paid AI dependency**. When no AI provider is configured, the Insights screen still returns deterministic analytics-only observations such as portfolio concentration, DCA cadence, tracked fee impact, and position status.
+
+To enable optional AI-assisted explanations, configure an OpenAI-compatible chat endpoint:
+
+```
+AI_API_URL=https://your-provider.example/v1/chat/completions
+AI_MODEL=your-model
+AI_API_KEY=your-server-side-key
+```
+
+The API key stays server-side. The model receives a reduced analytics context (portfolio totals, asset-level calculated values, and deterministic observations), not wallet keys or custody credentials. The AI layer is instructed not to predict prices or issue buy/sell/hold instructions. Requests are throttled and cached to reduce cost and provider traffic.
+
+
 ## Multi-currency model
 
 Each transaction stores:
@@ -149,6 +193,12 @@ Each transaction stores:
 This keeps the original transaction intact while allowing consistent portfolio reporting.
 
 For a purchase already denominated in the user's base currency, use an FX rate of `1`.
+
+## Theme behavior
+
+The default preference is **System**, so NextFi automatically follows the operating system/browser light or dark preference. Users can override it with **Light** or **Dark**. The preference is stored locally for instant startup and synchronized to the signed-in account for use on another device. A small pre-render bootstrap applies the theme before React mounts to avoid a light-theme flash for dark-mode users.
+
+Charts, inputs, tables, landing content, authentication, app screens, and admin screens all consume centralized semantic theme tokens.
 
 ## PWA behavior
 
@@ -346,4 +396,4 @@ Do not persist user-editable "profit", "average entry", or "break-even" values. 
 
 ## Disclaimer
 
-Crypto DCA Tracking App is portfolio tracking software. It does not provide financial advice or guarantee investment returns.
+NextFi is portfolio tracking and analytics software. It does not custody cryptocurrency, execute trades, guarantee investment returns, or replace professional financial advice.

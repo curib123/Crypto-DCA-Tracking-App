@@ -1,0 +1,21 @@
+export function NextFiLogo({
+  className = "nextfi-logo",
+  title = "NextFi",
+}: {
+  className?: string;
+  title?: string;
+}) {
+  return (
+    <svg
+      className={className}
+      viewBox="450 450 650 620"
+      role="img"
+      aria-label={title}
+      fill="currentColor"
+    >
+      <path d="M 1046 498 L 1036 491 L 1022 493 L 938 546 L 926 565 L 925 905 L 698 702 L 639 654 L 610 642 L 574 639 L 541 647 L 514 664 L 493 692 L 485 720 L 484 988 L 491 1009 L 504 1017 L 557 1018 L 573 1012 L 580 1001 L 581 781 L 585 770 L 594 763 L 602 763 L 611 768 L 858 995 L 874 1006 L 905 1018 L 948 1019 L 991 1007 L 1017 990 L 1039 963 L 1050 928 L 1050 507 Z" />
+      <path d="M 628 840 L 623 843 L 620 850 L 622 1004 L 630 1014 L 637 1017 L 699 1016 L 707 1011 L 714 997 L 713 913 L 705 902 L 638 842 Z" />
+      <path d="M 875 604 L 860 610 L 786 661 L 781 675 L 781 720 L 784 730 L 880 816 L 886 818 L 887 616 L 885 610 Z" />
+    </svg>
+  );
+}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch, formatMoney, isNetworkFailure } from "@/lib/api";
+import { PortfolioCharts } from "@/components/portfolio-charts";
 import {
   cacheUserResource,
   getActiveUser,
@@ -200,6 +201,8 @@ export function DashboardClient() {
           <p>{offline ? "Reconnect to refresh market-dependent values." : "Falls back to last entry if market data is unavailable."}</p>
         </article>
       </section>
+
+      <PortfolioCharts assets={assets} currency={currency} />
 
       <section className="panel">
         <div className="panel-title">

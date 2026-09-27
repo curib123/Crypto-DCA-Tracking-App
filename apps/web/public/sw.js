@@ -1,10 +1,12 @@
-const CACHE = "crypto-dca-shell-v2";
+const CACHE = "nextfi-shell-v3";
 const PUBLIC_SHELL = [
   "/",
   "/offline",
   "/app",
   "/app/transactions",
   "/app/market",
+  "/app/insights",
+  "/app/settings",
   "/icon.svg",
   "/icon-192.png",
   "/icon-512.png",

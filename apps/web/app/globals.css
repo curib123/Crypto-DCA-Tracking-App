@@ -5,14 +5,32 @@
 :root {
   --bg: #f7f7f5;
   --surface: #ffffff;
+  --surface-elevated: #ffffff;
   --ink: #090909;
   --muted: #686868;
   --line: #e5e5e1;
   --soft: #efefec;
   --positive: #117a43;
   --negative: #b42318;
+  --chart-grid: rgba(0, 0, 0, .08);
   --radius: 22px;
   --shadow: 0 22px 70px rgba(0,0,0,.08);
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --bg: #090909;
+  --surface: #111111;
+  --surface-elevated: #171717;
+  --ink: #f5f5f5;
+  --muted: #a3a3a3;
+  --line: #292929;
+  --soft: #1b1b1b;
+  --positive: #56c98b;
+  --negative: #ff7d73;
+  --chart-grid: rgba(255, 255, 255, .10);
+  --shadow: 0 22px 70px rgba(0,0,0,.32);
+  color-scheme: dark;
 }
 
 html {
@@ -1391,4 +1409,668 @@ tbody tr:last-child td {
   color: #777;
   text-align: center;
   font-size: 11px;
+}
+
+
+/* NEXTFI PLATFORM */
+.nextfi-logo {
+  width: 34px;
+  height: 34px;
+  display: block;
+  flex: 0 0 auto;
+  color: var(--ink);
+}
+
+.brand .nextfi-logo {
+  width: 32px;
+  height: 32px;
+}
+
+.preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.preview-brand .nextfi-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.hero-eyebrow {
+  margin-top: 22px;
+}
+
+.theme-control {
+  width: fit-content;
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--soft);
+}
+
+.theme-control button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.theme-control button.active {
+  background: var(--surface-elevated);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+.theme-control.compact button {
+  min-height: 30px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.button-dark {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.button-dark:hover {
+  background: var(--ink);
+  opacity: .88;
+}
+
+.button-light {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.text-button,
+.site-nav,
+.hero-lead,
+.section-heading p,
+.feature-card p,
+.steps p,
+.metric-card p,
+.muted-copy,
+.data-disclaimer {
+  color: var(--muted);
+}
+
+.site-header {
+  border-bottom-color: var(--line);
+}
+
+.site-nav a:hover,
+.site-footer a:hover {
+  color: var(--ink);
+}
+
+.announcement {
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  color: var(--muted);
+}
+
+.announcement-dot,
+.coin-dot {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.panel,
+.product-preview,
+.feature-card,
+.auth-card {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.preview-bars {
+  height: 190px;
+  margin: 28px 0 22px;
+  padding: 22px 14px 0;
+  display: flex;
+  align-items: end;
+  gap: 9px;
+  border-radius: 16px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+}
+
+.preview-bars span {
+  flex: 1;
+  min-height: 18px;
+  border-radius: 7px 7px 3px 3px;
+  background: var(--ink);
+  opacity: .9;
+}
+
+.chart-grid,
+.admin-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chart-panel {
+  min-width: 0;
+}
+
+.chart-canvas {
+  position: relative;
+  min-height: 310px;
+  height: 310px;
+}
+
+.doughnut-canvas {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.admin-chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-wide-chart {
+  grid-column: 1 / -1;
+}
+
+.empty-chart {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+}
+
+.settings-grid,
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.settings-card h2,
+.insight-card h2 {
+  margin: 8px 0 10px;
+  font-size: 20px;
+}
+
+.settings-card p,
+.insight-card p,
+.insight-summary p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.insight-summary {
+  margin-bottom: 16px;
+}
+
+.insight-card.attention {
+  border-style: dashed;
+}
+
+.insight-card.positive {
+  box-shadow: inset 0 3px 0 var(--positive);
+}
+
+.inline-message {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.auth-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-frame {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.admin-sidebar .sidebar-foot {
+  margin-top: auto;
+}
+
+.admin-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-filter-row input {
+  min-width: 260px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.admin-result-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pagination-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.status-danger {
+  color: var(--negative);
+  border-color: color-mix(in srgb, var(--negative) 35%, var(--line));
+}
+
+.cms-section {
+  margin-bottom: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.field textarea,
+.cms-row textarea,
+.cms-row input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 11px 12px;
+  resize: vertical;
+}
+
+.field textarea {
+  min-height: 100px;
+}
+
+.cms-list {
+  display: grid;
+  gap: 10px;
+}
+
+.cms-row {
+  display: grid;
+  grid-template-columns: minmax(180px, .7fr) minmax(260px, 1.4fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+}
+
+.cms-row textarea {
+  min-height: 76px;
+}
+
+.danger-text {
+  color: var(--negative);
+}
+
+.audit-json {
+  display: inline-block;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+table small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+table select {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 8px;
+}
+
+html[data-theme="dark"] .site-header,
+html[data-theme="dark"] .app-sidebar,
+html[data-theme="dark"] .app-topbar {
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .site-header,
+html[data-theme="dark"] .app-sidebar,
+html[data-theme="dark"] .admin-sidebar,
+html[data-theme="dark"] .app-topbar,
+html[data-theme="dark"] .mobile-nav {
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+
+html[data-theme="dark"] .button-white {
+  background: #f5f5f5;
+  color: #090909;
+}
+
+html[data-theme="dark"] .button-outline-white {
+  color: #f5f5f5;
+}
+
+html[data-theme="dark"] .final-cta {
+  background: #050505;
+  color: #f5f5f5;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+@media (max-width: 1000px) {
+  .settings-grid,
+  .insight-grid,
+  .admin-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-frame {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .theme-control.compact button {
+    padding: 0 6px;
+  }
+
+  .site-header .theme-control {
+    display: none;
+  }
+
+  .chart-grid,
+  .admin-chart-grid,
+  .settings-grid,
+  .insight-grid,
+  .admin-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-wide-chart {
+    grid-column: auto;
+  }
+
+  .admin-frame {
+    display: block;
+  }
+
+  .admin-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .admin-sidebar .app-nav {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .admin-filter-row {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .admin-filter-row input {
+    min-width: 100%;
+  }
+
+  .admin-result-count {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-wide {
+    grid-column: auto;
+  }
+
+  .cms-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* NEXTFI THEME QA OVERRIDES */
+textarea {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auth-page {
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--surface) 92%, transparent) 0, transparent 42%),
+    var(--bg);
+}
+
+.stack-form label,
+.transaction-form label,
+.inline-select {
+  color: var(--muted);
+}
+
+input,
+select,
+textarea {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--muted);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
+  outline: none;
+}
+
+.auth-switch,
+.auth-status {
+  color: var(--muted);
+}
+
+.auth-switch a {
+  color: var(--ink);
+}
+
+.form-error {
+  background: color-mix(in srgb, var(--negative) 10%, var(--surface));
+}
+
+.app-frame {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app-topbar {
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+}
+
+.app-loading,
+.page-heading p,
+.metric-card p,
+.muted,
+.form-message,
+.market-symbol span:last-child,
+.empty-cell,
+.empty-state,
+.market-foot,
+.skeleton-card {
+  color: var(--muted);
+}
+
+.page-heading .status-pill,
+.status-pill {
+  color: var(--muted);
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.panel,
+.skeleton-card {
+  background: var(--surface);
+}
+
+th,
+td {
+  border-bottom-color: var(--line);
+}
+
+th {
+  color: var(--muted);
+}
+
+.table-action {
+  color: var(--muted);
+}
+
+.table-action:hover,
+.empty-state h2 {
+  color: var(--ink);
+}
+
+.market-symbol .coin-dot {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* Keep the marketing preview deliberately monochrome/dark in both themes. */
+.product-preview {
+  background: #080808;
+  color: #ffffff;
+  border-color: #202020;
+}
+
+.product-preview .nextfi-logo {
+  color: #ffffff;
+}
+
+.product-preview .eyebrow,
+.preview-stats span,
+.preview-position span {
+  color: rgba(255,255,255,.52);
+}
+
+.preview-bars {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.10);
+}
+
+.preview-bars span {
+  background: #ffffff;
+}
+
+.preview-chip {
+  color: #ffffff;
+  border-color: rgba(255,255,255,.15);
+  background: rgba(255,255,255,.08);
+}
+
+.admin-sidebar .app-nav a {
+  color: var(--muted);
+}
+
+.admin-sidebar .app-nav a:hover,
+.admin-sidebar .app-nav a.active {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.admin-sidebar .sidebar-foot {
+  border-top-color: var(--line);
+  color: var(--muted);
+}
+
+.admin-sidebar .nextfi-logo {
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .mobile-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-color: var(--line);
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+  }
+
+  .mobile-nav a {
+    color: var(--muted);
+  }
+
+  .mobile-nav a.active {
+    color: var(--bg);
+    background: var(--ink);
+  }
 }

@@ -7,5 +7,6 @@ import { PortfolioController, PortfolioService } from "./portfolio";
   imports: [AuthModule, MarketModule],
   controllers: [PortfolioController],
   providers: [PortfolioService],
+  exports: [PortfolioService],
 })
 export class PortfolioModule {}

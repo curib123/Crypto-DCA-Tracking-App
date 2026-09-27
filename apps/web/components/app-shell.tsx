@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
+import { NextFiLogo } from "@/components/nextfi-logo";
+import { applyTheme, ThemeControl } from "@/components/theme-control";
 import {
   clearActiveUser,
   clearLogoutPending,
@@ -20,7 +22,17 @@ const links = [
   { href: "/app", label: "Overview" },
   { href: "/app/transactions", label: "Transactions" },
   { href: "/app/market", label: "Market" },
+  { href: "/app/insights", label: "AI Insights" },
+  { href: "/app/settings", label: "Settings" },
 ];
+
+type SessionUser = {
+  id: string;
+  email: string;
+  baseCurrency: string;
+  role: "USER" | "ADMIN";
+  themePreference: "SYSTEM" | "LIGHT" | "DARK";
+};
 
 async function syncOfflineQueue(userId: string) {
   const queued = await pendingTransactions(userId);
@@ -28,12 +40,7 @@ async function syncOfflineQueue(userId: string) {
 
   for (const row of queued) {
     const id = String(row._offlineId);
-    const {
-      _offlineId,
-      _queuedAt,
-      _userId,
-      ...payload
-    } = row;
+    const { _offlineId, _queuedAt, _userId, ...payload } = row;
 
     try {
       await apiFetch("/transactions", {
@@ -43,14 +50,11 @@ async function syncOfflineQueue(userId: string) {
       await removePending(id);
       changed = true;
     } catch {
-      // Stop in chronological queue order. A later entry may depend on this one.
       break;
     }
   }
 
-  if (changed) {
-    window.dispatchEvent(new Event("crypto-dca-data-updated"));
-  }
+  if (changed) window.dispatchEvent(new Event("crypto-dca-data-updated"));
 }
 
 function AppNavLink({
@@ -64,10 +68,7 @@ function AppNavLink({
   offline: boolean;
   children: React.ReactNode;
 }) {
-  if (offline) {
-    return <a href={href} className={className}>{children}</a>;
-  }
-
+  if (offline) return <a href={href} className={className}>{children}</a>;
   return <Link href={href} className={className}>{children}</Link>;
 }
 
@@ -76,20 +77,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [offline, setOffline] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function warmOfflineRoutes() {
       if (!navigator.onLine) return;
-
       try {
-        if ("serviceWorker" in navigator) {
-          await navigator.serviceWorker.ready;
-        }
+        if ("serviceWorker" in navigator) await navigator.serviceWorker.ready;
         links.forEach((link) => router.prefetch(link.href));
       } catch {
-        // Prefetch is an optimization only; it must never block the app.
+        // Prefetch is an optimization only.
       }
     }
 
@@ -103,29 +102,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               await apiFetch("/auth/logout", { method: "POST" }, false);
               await clearLogoutPending();
             } catch {
-              // Keep the marker so the server session is invalidated on a later retry.
+              // Keep the marker and retry when online later.
             }
           }
-
           await clearActiveUser();
           if (mounted) router.replace("/login");
           return;
         }
 
-        const user = await apiFetch<{ id: string; email: string; baseCurrency: string }>("/auth/me");
-        await setActiveUser(user);
-        await syncOfflineQueue(user.id);
+        const nextUser = await apiFetch<SessionUser>("/auth/me");
+        if (!localStorage.getItem("nextfi-theme")) {
+          localStorage.setItem("nextfi-theme", nextUser.themePreference);
+          applyTheme(nextUser.themePreference);
+        }
+        await setActiveUser(nextUser);
+        await syncOfflineQueue(nextUser.id);
 
         if (mounted) {
+          setUser(nextUser);
           setOffline(false);
           setReady(true);
         }
-
         void warmOfflineRoutes();
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
-          // Preserve cached/queued data across session expiry so offline entries
-          // are not lost. Explicit sign-out is the action that clears device data.
           await clearActiveUser();
           if (mounted) router.replace("/login");
           return;
@@ -149,12 +149,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     verify();
-
-    const onOnline = () => {
-      verify();
-    };
+    const onOnline = () => verify();
     const onOffline = () => setOffline(true);
-
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
 
@@ -189,16 +185,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (!ready) {
-    return <main className="app-loading">Loading your portfolio…</main>;
-  }
+  if (!ready) return <main className="app-loading">Loading NextFi…</main>;
 
   return (
     <div className="app-frame">
       <aside className="app-sidebar">
         <AppNavLink href="/app" offline={offline} className="brand brand-app">
-          <span className="brand-mark" aria-hidden="true">D</span>
-          <span>Crypto DCA</span>
+          <NextFiLogo />
+          <span>NextFi</span>
         </AppNavLink>
 
         <nav className="app-nav" aria-label="Application navigation">
@@ -212,6 +206,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {link.label}
             </AppNavLink>
           ))}
+          {user?.role === "ADMIN" && !offline && (
+            <Link href="/admin" className={pathname.startsWith("/admin") ? "active" : undefined}>
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="sidebar-foot">
@@ -227,6 +226,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <strong>{offline ? "Reading last synchronized data." : "Track real cost, not hype."}</strong>
           </div>
           <div className="topbar-actions">
+            <ThemeControl compact syncAccount={!offline} />
             {offline && <span className="status-pill">Offline</span>}
             <AppNavLink href="/app/transactions" offline={offline} className="button button-dark button-small">
               + Add DCA
@@ -237,14 +237,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="mobile-nav" aria-label="Mobile application navigation">
-        {links.map((link) => (
+        {links.slice(0, 4).map((link) => (
           <AppNavLink
             key={link.href}
             href={link.href}
             offline={offline}
             className={pathname === link.href ? "active" : undefined}
           >
-            {link.label}
+            {link.label === "Transactions" ? "Ledger" : link.label === "AI Insights" ? "Insights" : link.label}
           </AppNavLink>
         ))}
       </nav>
