@@ -10,6 +10,7 @@ type UserRow = {
   baseCurrency: string;
   role: "USER" | "ADMIN";
   status: "ACTIVE" | "SUSPENDED";
+  adsOverride: "INHERIT" | "ENABLED" | "DISABLED";
   themePreference: string;
   lastLoginAt: string | null;
   createdAt: string;
@@ -51,7 +52,10 @@ export function AdminUsersClient() {
     setQuery(search.trim());
   }
 
-  async function patchUser(id: string, change: Partial<Pick<UserRow, "role" | "status">>) {
+  async function patchUser(
+    id: string,
+    change: Partial<Pick<UserRow, "role" | "status" | "adsOverride">>,
+  ) {
     setMessage("");
     try {
       await apiFetch(`/admin/users/${id}`, {
@@ -71,7 +75,7 @@ export function AdminUsersClient() {
         <div>
           <span className="eyebrow">User management</span>
           <h1>Accounts</h1>
-          <p>Search, activate, suspend and manage administrator access without exposing authentication secrets.</p>
+          <p>Search accounts, manage app roles, suspend access, and control per-user ad serving. Control-panel authentication is separate.</p>
         </div>
       </div>
 
@@ -108,6 +112,7 @@ export function AdminUsersClient() {
                 <th>Role</th>
                 <th>Status</th>
                 <th>Base</th>
+                <th>Ads</th>
                 <th>Last login</th>
                 <th>Joined</th>
                 <th>Actions</th>
@@ -132,6 +137,21 @@ export function AdminUsersClient() {
                   </td>
                   <td><span className={user.status === "ACTIVE" ? "status-pill" : "status-pill status-danger"}>{user.status}</span></td>
                   <td>{user.baseCurrency}</td>
+                  <td>
+                    <select
+                      value={user.adsOverride}
+                      onChange={(event) =>
+                        patchUser(user.id, {
+                          adsOverride: event.target.value as UserRow["adsOverride"],
+                        })
+                      }
+                      aria-label={"Ad policy for " + user.email}
+                    >
+                      <option value="INHERIT">Inherit global</option>
+                      <option value="ENABLED">Force on</option>
+                      <option value="DISABLED">Force off</option>
+                    </select>
+                  </td>
                   <td>{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}</td>
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                   <td>
@@ -145,7 +165,7 @@ export function AdminUsersClient() {
                   </td>
                 </tr>
               ))}
-              {data && !data.items.length && <tr><td colSpan={7} className="empty-cell">No users found.</td></tr>}
+              {data && !data.items.length && <tr><td colSpan={8} className="empty-cell">No users found.</td></tr>}
             </tbody>
           </table>
         </div>
