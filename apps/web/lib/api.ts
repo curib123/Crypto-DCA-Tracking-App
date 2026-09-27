@@ -1,6 +1,16 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
@@ -25,10 +35,14 @@ export async function apiFetch<T>(
     const message = Array.isArray(payload?.message)
       ? payload.message.join(", ")
       : payload?.message || "Request failed";
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
 
   return payload as T;
+}
+
+export function isNetworkFailure(error: unknown) {
+  return error instanceof TypeError || (error instanceof Error && /fetch|network/i.test(error.message));
 }
 
 export function formatMoney(value: number, currency: string) {
