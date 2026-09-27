@@ -104,13 +104,17 @@ export function DashboardClient() {
 
     const onOnline = () => load();
     const onOffline = () => setOffline(true);
+    const onDataUpdated = () => load();
+
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
+    window.addEventListener("crypto-dca-data-updated", onDataUpdated);
 
     return () => {
       mounted = false;
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
+      window.removeEventListener("crypto-dca-data-updated", onDataUpdated);
     };
   }, []);
 
