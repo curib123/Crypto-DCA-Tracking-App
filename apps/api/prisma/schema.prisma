@@ -21,9 +21,11 @@ enum TransactionType {
 
 model User {
   id           String        @id @default(uuid())
-  email        String        @unique
-  passwordHash String
-  baseCurrency String        @default("USD")
+  googleSubject String       @unique
+  email         String       @unique
+  name          String?
+  pictureUrl    String?
+  baseCurrency  String       @default("USD")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   transactions Transaction[]
