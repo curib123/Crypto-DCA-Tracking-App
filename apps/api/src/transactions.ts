@@ -127,7 +127,7 @@ export class TransactionsService {
       );
     }
 
-    const quantityRequired = [
+    const quantityRequiredTypes: TransactionType[] = [
       TransactionType.BUY,
       TransactionType.SELL,
       TransactionType.TRANSFER_IN,
@@ -136,7 +136,9 @@ export class TransactionsService {
       TransactionType.REWARD,
       TransactionType.STAKING_REWARD,
       TransactionType.ADJUSTMENT,
-    ].includes(dto.type);
+    ];
+
+    const quantityRequired = quantityRequiredTypes.includes(dto.type);
 
     if (quantityRequired && dto.quantity <= 0) {
       throw new BadRequestException("Quantity must be greater than zero for this transaction type.");
