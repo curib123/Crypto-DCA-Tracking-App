@@ -26,7 +26,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://nextfi_ci:nextfi_ci_password@localhost:5432/nextfi_ci?schema=public
-      DIRECT_URL: postgresql://nextfi_ci:nextfi_ci_password@localhost:5432/nextfi_ci?schema=public
+      DIRECT_URL: postgresql://nextfi_ci:nextfi_ci_password@localhost:5432/nextfi_ci?sslmode=disable
       JWT_SECRET: ci-only-secret-at-least-32-characters-long
       CONTROL_PANEL_USERNAME: admin
       CONTROL_PANEL_PASSWORD: NextFi-CI-Secure-123!
