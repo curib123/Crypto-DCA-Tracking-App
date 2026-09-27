@@ -42,3 +42,14 @@ test("oversized sell data cannot inflate realized pnl", () => {
   assert.equal(result.quantity, 0);
   assert.equal(result.realizedPnl, 50);
 });
+
+
+test("positive adjustment adds corrected quantity and historical basis without a DCA buy", () => {
+  const result = calculateAssetPosition([
+    { type: "ADJUSTMENT", quantity: 0.5, amountBase: 50, feeBase: 0, occurredAt: "2026-01-01" },
+  ]);
+  assert.equal(result.quantity, 0.5);
+  assert.equal(result.remainingCostBasis, 50);
+  assert.equal(result.averageEntry, 100);
+  assert.equal(result.buyCount, 0);
+});
