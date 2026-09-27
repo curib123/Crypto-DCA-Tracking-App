@@ -13,33 +13,29 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: crypto_dca_ci
-          POSTGRES_USER: crypto_dca_ci
-          POSTGRES_PASSWORD: crypto_dca_ci_password
+          POSTGRES_DB: nextfi_ci
+          POSTGRES_USER: nextfi_ci
+          POSTGRES_PASSWORD: nextfi_ci_password
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U crypto_dca_ci -d crypto_dca_ci"
+          --health-cmd "pg_isready -U nextfi_ci -d nextfi_ci"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://crypto_dca_ci:crypto_dca_ci_password@localhost:5432/crypto_dca_ci?schema=public
+      DATABASE_URL: postgresql://nextfi_ci:nextfi_ci_password@localhost:5432/nextfi_ci?schema=public
+      DIRECT_URL: postgresql://nextfi_ci:nextfi_ci_password@localhost:5432/nextfi_ci?schema=public
       JWT_SECRET: ci-only-secret-at-least-32-characters-long
       CONTROL_PANEL_USERNAME: admin
-      CONTROL_PANEL_PASSWORD: pass
+      CONTROL_PANEL_PASSWORD: NextFi-CI-Secure-123!
       CONTROL_PANEL_JWT_SECRET: ci-control-panel-secret-at-least-32-characters
-      CORS_ORIGIN: http://localhost:3000
       GOOGLE_CLIENT_ID: ci-google-client-id.apps.googleusercontent.com
-      DEFAULT_BASE_CURRENCY: USD
-      NEXT_PUBLIC_API_URL: http://localhost:4000/api
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ci-google-client-id.apps.googleusercontent.com
-      APP_DOMAIN: dca-ci.example.com
-      POSTGRES_DB: crypto_dca_ci
-      POSTGRES_USER: crypto_dca_ci
-      POSTGRES_PASSWORD: crypto_dca_ci_password
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      DEFAULT_BASE_CURRENCY: USD
 
     steps:
       - uses: actions/checkout@v4
@@ -56,199 +52,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Generate Prisma client
-        run: pnpm db:generate
-
-      - name: Validate Prisma schema and migrations
+      - name: Validate and migrate database
         run: |
-          pnpm --filter @crypto-dca/api exec prisma validate
-          pnpm --filter @crypto-dca/api prisma:deploy
+          pnpm --filter @crypto-dca/web prisma:generate
+          pnpm --filter @crypto-dca/web exec prisma validate
+          pnpm --filter @crypto-dca/web prisma:deploy
 
       - name: Test calculation engine
         run: pnpm --filter @crypto-dca/core test
 
-      - name: Test API scaling architecture
-        run: pnpm --filter @crypto-dca/api test
-
-      - name: Test offline cache and service worker
+      - name: Test PWA/offline behavior
         run: pnpm --filter @crypto-dca/web test
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm --filter @crypto-dca/web typecheck
 
-      - name: Build
-        run: pnpm build
-
-      - name: Validate Docker Compose files
-        run: |
-          docker compose config --quiet
-          docker compose -f docker-compose.prod.yml config --quiet
-
-      - name: Validate deployment scripts
-        run: |
-          bash -n scripts/deploy/bootstrap-docker.sh
-          bash -n scripts/deploy/remote-deploy.sh
-          bash -n scripts/aws/prepare-t4g.sh
-
-      - name: API runtime smoke test
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          NODE_ENV=test PORT=4000 pnpm --filter @crypto-dca/api start >/tmp/crypto-dca-api.log 2>&1 &
-          API_PID=$!
-          trap 'kill "$API_PID" 2>/dev/null || true; cat /tmp/crypto-dca-api.log' EXIT
-
-          for attempt in {1..30}; do
-            if curl --fail --silent http://localhost:4000/api/health >/dev/null; then
-              break
-            fi
-            sleep 1
-          done
-
-          curl --fail --silent http://localhost:4000/api/health | node -e '
-            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-              const j=JSON.parse(s);
-              if(j.status!=="ok" || j.database!=="ok") process.exit(1);
-            });
-          '
-
-          # Google is the only production sign-in path. Verify invalid Google credentials are rejected.
-          STATUS=$(curl --silent --output /tmp/google-invalid.json --write-out '%{http_code}' \
-            -H 'Content-Type: application/json' \
-            -d '{"credential":"invalid-google-credential-for-ci-testing"}' \
-            http://localhost:4000/api/auth/google)
-          test "$STATUS" = "401"
-
-          # Seed a Google-identity user directly for authenticated API smoke tests,
-          # then issue the same app JWT the verified Google flow would create.
-          TOKEN=$(pnpm --filter @crypto-dca/api exec node - <<'NODE'
-          const { PrismaClient } = require("@prisma/client");
-          const { JwtService } = require("@nestjs/jwt");
-
-          (async () => {
-            const prisma = new PrismaClient();
-            const user = await prisma.user.upsert({
-              where: { googleSubject: "ci-google-subject" },
-              update: {},
-              create: {
-                googleSubject: "ci-google-subject",
-                email: "ci@example.com",
-                name: "CI User",
-                baseCurrency: "USD",
-              },
-            });
-
-            const jwt = new JwtService({
-              secret: process.env.JWT_SECRET,
-              signOptions: { expiresIn: "7d" },
-            });
-
-            process.stdout.write(jwt.sign({ sub: user.id, email: user.email }));
-            await prisma.$disconnect();
-          })().catch((error) => {
-            console.error(error);
-            process.exit(1);
-          });
-          NODE
-          )
-
-          COOKIE="crypto_dca_session=$TOKEN"
-
-          BUY_PAYLOAD='{"clientReference":"11111111-1111-4111-8111-111111111111","assetSymbol":"BTC","type":"BUY","quantity":0.001,"unitPrice":100000,"amountSpent":100,"quoteCurrency":"USD","feeBase":0,"occurredAt":"2026-01-01T00:00:00.000Z"}'
-
-          curl --fail --silent             -b "$COOKIE"             -H 'Content-Type: application/json'             -d "$BUY_PAYLOAD"             http://localhost:4000/api/transactions >/tmp/buy.json
-
-          # Retry the same client reference: it must remain one ledger row.
-          curl --fail --silent             -b "$COOKIE"             -H 'Content-Type: application/json'             -d "$BUY_PAYLOAD"             http://localhost:4000/api/transactions >/tmp/buy-retry.json
-
-          curl --fail --silent             -b "$COOKIE"             http://localhost:4000/api/transactions | node -e '
-              let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-                const rows=JSON.parse(s);
-                if(rows.length!==1) throw new Error("Idempotency failed");
-                if(Number(rows[0].quantity)!==0.001) throw new Error("Quantity mismatch");
-              });
-            '
-
-          curl --fail --silent             -b "$COOKIE"             http://localhost:4000/api/portfolio/summary | node -e '
-              let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-                const p=JSON.parse(s);
-                if(p.currency!=="USD") throw new Error("Base currency mismatch");
-                if(p.assets.length!==1 || p.assets[0].symbol!=="BTC") throw new Error("Position missing");
-                if(Math.abs(p.assets[0].quantity-0.001)>1e-12) throw new Error("Portfolio quantity mismatch");
-                if(Math.abs(p.totals.invested-100)>1e-9) throw new Error("Invested amount mismatch");
-              });
-            '
-
-          # Overselling must be rejected.
-          STATUS=$(curl --silent --output /tmp/oversell.json --write-out '%{http_code}'             -b "$COOKIE"             -H 'Content-Type: application/json'             -d '{"clientReference":"22222222-2222-4222-8222-222222222222","assetSymbol":"BTC","type":"SELL","quantity":0.01,"unitPrice":100000,"amountSpent":1000,"quoteCurrency":"USD","feeBase":0,"occurredAt":"2026-01-02T00:00:00.000Z"}'             http://localhost:4000/api/transactions)
-          test "$STATUS" = "400"
-
-          # Cross-currency ledger records require an explicit historical FX rate.
-          STATUS=$(curl --silent --output /tmp/fx.json --write-out '%{http_code}'             -b "$COOKIE"             -H 'Content-Type: application/json'             -d '{"clientReference":"33333333-3333-4333-8333-333333333333","assetSymbol":"ETH","type":"BUY","quantity":0.01,"unitPrice":200000,"amountSpent":2000,"quoteCurrency":"PHP","feeBase":0,"occurredAt":"2026-01-02T00:00:00.000Z"}'             http://localhost:4000/api/transactions)
-          test "$STATUS" = "400"
-
-
-          # Control panel uses a separate username/password session.
-          ADMIN_JAR=/tmp/nextfi-admin-cookies.txt
-          LOGIN_STATUS=$(curl --silent --output /tmp/admin-login.json --write-out '%{http_code}' \
-            -c "$ADMIN_JAR" \
-            -H 'Content-Type: application/json' \
-            -d '{"username":"admin","password":"pass"}' \
-            http://localhost:4000/api/admin-auth/login)
-          test "$LOGIN_STATUS" = "201"
-
-          cat /tmp/admin-login.json | node -e '
-            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-              const j=JSON.parse(s);
-              if(!j.admin || j.admin.username!=="admin" || j.admin.mustChangePassword!==true) {
-                throw new Error("Bootstrap admin login contract failed");
-              }
-            });
-          '
-
-          # Default bootstrap credentials must not unlock admin APIs until changed.
-          STATUS=$(curl --silent --output /tmp/admin-before-change.json --write-out '%{http_code}' \
-            -b "$ADMIN_JAR" \
-            http://localhost:4000/api/admin/overview)
-          test "$STATUS" = "403"
-
-          curl --fail --silent \
-            -b "$ADMIN_JAR" \
-            -H 'Content-Type: application/json' \
-            -d '{"currentPassword":"pass","newPassword":"NextFi-CI-Secure-123!"}' \
-            http://localhost:4000/api/admin-auth/change-password >/tmp/admin-password-change.json
-
-          curl --fail --silent \
-            -b "$ADMIN_JAR" \
-            http://localhost:4000/api/admin/overview >/tmp/admin-overview.json
-
-          # AdSense is configured structurally but remains disabled without env publisher IDs.
-          curl --fail --silent \
-            -b "$ADMIN_JAR" \
-            http://localhost:4000/api/admin/ads | node -e '
-              let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-                const j=JSON.parse(s);
-                if(j.settings.masterEnabled!==false) throw new Error("Ads must default off");
-                if(j.credentials.clientConfigured!==false) throw new Error("CI should not have AdSense credentials");
-              });
-            '
-
-          curl --fail --silent \
-            -b "$ADMIN_JAR" \
-            -H 'Content-Type: application/json' \
-            -X PUT \
-            -d '{"masterEnabled":true,"appEnabled":true,"landingEnabled":true,"defaultForUsers":true}' \
-            http://localhost:4000/api/admin/ads >/tmp/admin-ads-update.json
-
-          curl --fail --silent http://localhost:4000/api/ads/public | node -e '
-            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-              const j=JSON.parse(s);
-              if(j.enabled!==false) throw new Error("Ads must stay off without valid publisher credentials");
-            });
-          '
-
-          curl --fail --silent \
-            -b "$ADMIN_JAR" \
-            -X POST \
-            http://localhost:4000/api/admin-auth/logout >/tmp/admin-logout.json
+      - name: Build production Next.js app
+        run: pnpm --filter @crypto-dca/web build

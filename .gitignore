@@ -8,4 +8,4 @@ dist
 coverage
 *.log
 .DS_Store
-apps/api/prisma/*.db
+.vercel

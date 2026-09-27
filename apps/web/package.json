@@ -1,28 +1,39 @@
 {
   "name": "@crypto-dca/web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start -H 0.0.0.0",
     "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit",
-    "test": "node --check public/sw.js && tsx --test \"lib/*.test.ts\""
+    "typecheck": "prisma generate && tsc --noEmit",
+    "test": "node --check public/sw.js && tsx --test \"lib/*.test.ts\"",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@crypto-dca/core": "workspace:*",
+    "@prisma/client": "6.19.3",
+    "chart.js": "^4.5.0",
+    "google-auth-library": "11.1.0",
     "next": "16.3.6",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "chart.js": "^4.5.0",
-    "react-chartjs-2": "^5.3.0"
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "typescript": "^5.9.2",
     "fake-indexeddb": "^6.2.4",
-    "tsx": "^4.20.6"
+    "prisma": "6.19.3",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
   }
 }
