@@ -71,23 +71,43 @@ export function AdSenseSlot({
     let mounted = true;
     const path = placement === "app" ? "/ads/app" : "/ads/public";
 
-    apiFetch<AdConfig>(path, {}, placement === "app")
-      .then((value) => {
+    async function refresh() {
+      try {
+        const value = await apiFetch<AdConfig>(
+          path,
+          {},
+          placement === "app",
+        );
         if (mounted) setConfig(value);
-      })
-      .catch(() => {
+      } catch {
         if (mounted) {
           setConfig({ enabled: false, placement });
         }
-      });
+      }
+    }
+
+    void refresh();
+
+    const timer = window.setInterval(refresh, 60_000);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       mounted = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [placement]);
 
   useEffect(() => {
-    if (!config?.enabled || rendered.current) return;
+    if (!config?.enabled) {
+      rendered.current = false;
+      return;
+    }
+
+    if (rendered.current) return;
 
     let cancelled = false;
 
