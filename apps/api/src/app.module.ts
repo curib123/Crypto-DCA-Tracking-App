@@ -2,17 +2,19 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
-import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
-import { AuthController, AuthService, JwtAuthGuard } from "./auth";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { HealthController } from "./health";
-import { MarketController, MarketService } from "./market";
-import { PortfolioController, PortfolioService } from "./portfolio";
-import { PrismaService } from "./prisma.service";
-import { TransactionsController, TransactionsService } from "./transactions";
+import { DatabaseModule } from "./infrastructure/database/database.module";
+import { SessionAwareThrottlerGuard } from "./infrastructure/rate-limit/session-aware-throttler.guard";
+import { AuthModule } from "./modules/auth/auth.module";
+import { MarketModule } from "./modules/market/market.module";
+import { PortfolioModule } from "./modules/portfolio/portfolio.module";
+import { TransactionsModule } from "./modules/transactions/transactions.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     JwtModule.registerAsync({
       global: true,
@@ -31,22 +33,14 @@ import { TransactionsController, TransactionsService } from "./transactions";
         };
       },
     }),
+    AuthModule,
+    MarketModule,
+    PortfolioModule,
+    TransactionsModule,
   ],
-  controllers: [
-    HealthController,
-    AuthController,
-    TransactionsController,
-    PortfolioController,
-    MarketController,
-  ],
+  controllers: [HealthController],
   providers: [
-    PrismaService,
-    AuthService,
-    JwtAuthGuard,
-    TransactionsService,
-    PortfolioService,
-    MarketService,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: SessionAwareThrottlerGuard },
   ],
 })
 export class AppModule {}
