@@ -244,6 +244,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href={link.href}
               offline={offline}
               className={active ? "active" : undefined}
+              active={active}
             >
               <NavIcon name={link.icon} size={18} />
               <span>{link.mobileLabel || link.label}</span>
