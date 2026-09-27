@@ -63,7 +63,8 @@ export function calculateAssetPosition(input: LedgerTransaction[]): AssetPositio
       const sold = Math.min(qty, quantity);
       const averageCost = costBasis / quantity;
       const removedCost = averageCost * sold;
-      const proceeds = Math.max(0, amount) - Math.max(0, fee);
+      const saleFraction = qty > 0 ? sold / qty : 0;
+      const proceeds = (Math.max(0, amount) - Math.max(0, fee)) * saleFraction;
       realizedPnl += proceeds - removedCost;
       quantity -= sold;
       costBasis = Math.max(0, costBasis - removedCost);
