@@ -161,3 +161,8 @@
   font-size: 12px;
   line-height: 1.65;
 }
+
+
+.admin-frame table {
+  min-width: 900px;
+}
