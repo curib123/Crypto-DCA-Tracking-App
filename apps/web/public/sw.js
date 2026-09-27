@@ -1,5 +1,15 @@
-const CACHE = "crypto-dca-public-v1";
-const PUBLIC_SHELL = ["/", "/offline", "/icon.svg", "/maskable.svg"];
+const CACHE = "crypto-dca-shell-v2";
+const PUBLIC_SHELL = [
+  "/",
+  "/offline",
+  "/app",
+  "/app/transactions",
+  "/app/market",
+  "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/maskable-512.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PUBLIC_SHELL)));
@@ -24,22 +34,35 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("/offline")),
+      fetch(request)
+        .then((response) => {
+          if (response.ok && (url.pathname === "/" || url.pathname.startsWith("/app"))) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const exact = await caches.match(request);
+          return exact || caches.match("/offline");
+        }),
     );
     return;
   }
 
   if (
     url.pathname.startsWith("/_next/static/") ||
-    url.pathname === "/icon.svg" ||
-    url.pathname === "/maskable.svg"
+    url.pathname.startsWith("/icon") ||
+    url.pathname.startsWith("/maskable")
   ) {
     event.respondWith(
       caches.match(request).then((cached) =>
         cached ||
         fetch(request).then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
           return response;
         }),
       ),
