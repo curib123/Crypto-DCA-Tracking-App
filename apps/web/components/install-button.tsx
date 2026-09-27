@@ -73,18 +73,12 @@ export function InstallButton({
     setHint(choice.outcome === "accepted" ? "NextFi is being installed." : "Install cancelled.");
   }
 
-  if (nativeApp) {
-    return (
-      <button type="button" className={className} disabled aria-label="NextFi Android app is installed">
-        Android app
-      </button>
-    );
-  }
+  if (nativeApp) return null;
 
   return (
     <>
       <button type="button" className={className} onClick={() => setOpen(true)}>
-        {installed ? "Installed" : label}
+        {label}
       </button>
 
       <AppModal
