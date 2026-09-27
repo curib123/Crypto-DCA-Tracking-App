@@ -26,6 +26,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       JWT_SECRET: ${JWT_SECRET}
       CORS_ORIGIN: https://${APP_DOMAIN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      DEFAULT_BASE_CURRENCY: ${DEFAULT_BASE_CURRENCY:-USD}
       COINGECKO_DEMO_API_KEY: ${COINGECKO_DEMO_API_KEY:-}
     depends_on:
       postgres:
@@ -40,6 +42,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_SITE_URL: https://${APP_DOMAIN}
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
     restart: unless-stopped
     environment:
       NODE_ENV: production
