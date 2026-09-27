@@ -36,6 +36,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
+          const active = await getActiveUser();
+          if (active) await clearUserOfflineData(active.id);
           await clearActiveUser();
           if (mounted) router.replace("/login");
           return;
