@@ -4,14 +4,21 @@ import {
   ConflictException,
   Controller,
   ExecutionContext,
+  Get,
   Injectable,
   Post,
+  Req,
+  Res,
   UnauthorizedException,
+  UseGuards,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { IsEmail, IsIn, IsOptional, IsString, MinLength } from "class-validator";
 import bcrypt from "bcryptjs";
 import { PrismaService } from "./prisma.service";
+
+const SESSION_COOKIE = "crypto_dca_session";
+const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export class RegisterDto {
   @IsEmail()
@@ -35,6 +42,11 @@ export class LoginDto {
   password!: string;
 }
 
+type AuthResult = {
+  token: string;
+  user: { id: string; email: string; baseCurrency: string };
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -42,7 +54,7 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<AuthResult> {
     const email = dto.email.trim().toLowerCase();
     const existing = await this.prisma.user.findUnique({ where: { email } });
 
@@ -62,7 +74,7 @@ export class AuthService {
     return this.issueToken(user);
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<AuthResult> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.trim().toLowerCase() },
     });
@@ -78,12 +90,38 @@ export class AuthService {
     });
   }
 
-  private issueToken(user: { id: string; email: string; baseCurrency: string }) {
+  async me(userId: string) {
+    return this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { id: true, email: true, baseCurrency: true },
+    });
+  }
+
+  private issueToken(user: { id: string; email: string; baseCurrency: string }): AuthResult {
     return {
-      accessToken: this.jwt.sign({ sub: user.id, email: user.email }),
+      token: this.jwt.sign({ sub: user.id, email: user.email }),
       user,
     };
   }
+}
+
+function readCookie(cookieHeader: string, name: string) {
+  const prefix = `${name}=`;
+  const part = cookieHeader
+    .split(";")
+    .map((value) => value.trim())
+    .find((value) => value.startsWith(prefix));
+  return part ? part.slice(prefix.length) : "";
+}
+
+function setSessionCookie(response: any, token: string) {
+  response.cookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: SESSION_MAX_AGE_MS,
+    path: "/",
+  });
 }
 
 @Injectable()
@@ -93,7 +131,9 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const header = String(request.headers.authorization || "");
-    const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+    const bearer = header.startsWith("Bearer ") ? header.slice(7) : "";
+    const cookie = readCookie(String(request.headers.cookie || ""), SESSION_COOKIE);
+    const token = bearer || cookie;
 
     if (!token) throw new UnauthorizedException("Sign in required.");
 
@@ -112,12 +152,33 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post("register")
-  register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) response: any) {
+    const result = await this.auth.register(dto);
+    setSessionCookie(response, result.token);
+    return { user: result.user };
   }
 
   @Post("login")
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto);
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: any) {
+    const result = await this.auth.login(dto);
+    setSessionCookie(response, result.token);
+    return { user: result.user };
+  }
+
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  me(@Req() request: any) {
+    return this.auth.me(request.user.id);
+  }
+
+  @Post("logout")
+  logout(@Res({ passthrough: true }) response: any) {
+    response.clearCookie(SESSION_COOKIE, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+    return { signedOut: true };
   }
 }
