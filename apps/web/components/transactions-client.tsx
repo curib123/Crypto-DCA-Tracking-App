@@ -110,6 +110,12 @@ export function TransactionsClient() {
   useEffect(() => {
     void load();
 
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "add") {
+      setTransactionOpen(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
     const onOnline = () => {
       setOffline(false);
       void load();
