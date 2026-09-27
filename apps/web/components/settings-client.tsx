@@ -108,6 +108,11 @@ export function SettingsClient() {
           <div><strong>About NextFi</strong><span>Crypto DCA tracking, cost basis and portfolio analytics.</span></div>
           <span className="settings-value">›</span>
         </a>
+        <a className="settings-list-item" href="/app/help">
+          <div className="settings-icon">?</div>
+          <div><strong>Help & feedback</strong><span>Common questions, offline behavior and bug reporting.</span></div>
+          <span className="settings-value">›</span>
+        </a>
         <a className="settings-list-item" href="/privacy">
           <div className="settings-icon">⌁</div>
           <div><strong>Privacy</strong><span>How account and portfolio data are handled.</span></div>
