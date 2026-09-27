@@ -1,12 +1,6 @@
 import type { NavIconName } from "@/config/navigation";
 
-export function NavIcon({
-  name,
-  size = 18,
-}: {
-  name: NavIconName;
-  size?: number;
-}) {
+export function NavIcon({ name, size = 18 }: { name: NavIconName; size?: number }) {
   const common = {
     width: size,
     height: size,
@@ -22,6 +16,9 @@ export function NavIcon({
   if (name === "home") {
     return <svg {...common}><path d="M3 10.8 12 3l9 7.8"/><path d="M5.5 9.8V21h13V9.8"/><path d="M9.5 21v-6h5v6"/></svg>;
   }
+  if (name === "portfolio") {
+    return <svg {...common}><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M8 6V4h8v2"/><path d="M3 11h18"/><path d="M9 15h6"/></svg>;
+  }
   if (name === "ledger") {
     return <svg {...common}><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>;
   }
@@ -33,6 +30,12 @@ export function NavIcon({
   }
   if (name === "settings") {
     return <svg {...common}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>;
+  }
+  if (name === "profile") {
+    return <svg {...common}><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>;
+  }
+  if (name === "plus") {
+    return <svg {...common}><path d="M12 5v14M5 12h14"/></svg>;
   }
   if (name === "users") {
     return <svg {...common}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>;
