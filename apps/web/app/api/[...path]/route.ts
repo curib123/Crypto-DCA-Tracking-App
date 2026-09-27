@@ -22,16 +22,20 @@ import {
   assertRateLimit,
   auditAdminAction,
   createTransaction,
+  createDcaPlan,
   getLandingContent,
   getMarketPrices,
   getSettings,
+  listDcaPlans,
   listTransactions,
   portfolioSummary,
   publicAdConfig,
+  removeDcaPlan,
   removeTransaction,
   saveAdminAds,
   saveLandingContent,
   updateAdminUser,
+  updateDcaPlan,
   updateSettings,
 } from "@/lib/server/services";
 
@@ -105,6 +109,33 @@ async function handle(request: NextRequest, context: RouteContext) {
       const id = path.slice("transactions/".length);
       if (!id) throw new HttpError(400, "Transaction id is required.");
       return json(await removeTransaction(user.id, id));
+    }
+
+
+    if (path === "dca-plans" && method === "GET") {
+      const user = await requireUser(request);
+      return json(await listDcaPlans(user.id));
+    }
+
+    if (path === "dca-plans" && method === "POST") {
+      const user = await requireUser(request);
+      const body = await readJson<Record<string, unknown>>(request);
+      return json(await createDcaPlan(user.id, body), { status: 201 });
+    }
+
+    if (path.startsWith("dca-plans/") && method === "PATCH") {
+      const user = await requireUser(request);
+      const id = path.slice("dca-plans/".length);
+      if (!id) throw new HttpError(400, "DCA plan id is required.");
+      const body = await readJson<Record<string, unknown>>(request);
+      return json(await updateDcaPlan(user.id, id, body));
+    }
+
+    if (path.startsWith("dca-plans/") && method === "DELETE") {
+      const user = await requireUser(request);
+      const id = path.slice("dca-plans/".length);
+      if (!id) throw new HttpError(400, "DCA plan id is required.");
+      return json(await removeDcaPlan(user.id, id));
     }
 
     if (path === "portfolio/summary" && method === "GET") {
