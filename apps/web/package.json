@@ -34,5 +34,10 @@
     "prisma": "6.19.3",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
+  },
+  "packageManager": "pnpm@10.17.1",
+  "engines": {
+    "node": "22.x",
+    "pnpm": "10.17.1"
   }
 }
