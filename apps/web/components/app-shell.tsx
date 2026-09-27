@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
 import { applyTheme, ThemeControl } from "@/components/theme-control";
@@ -96,6 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [signingOut, setSigningOut] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [nativeApp, setNativeApp] = useState(false);
 
   const openTransaction = useCallback((asset = "BTC") => {
     setTransactionAsset(asset);
@@ -104,6 +106,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    setNativeApp(Capacitor.isNativePlatform());
+
     const onTransaction = (event: Event) => {
       const custom = event as CustomEvent<{ asset?: string }>;
       openTransaction(custom.detail?.asset || "BTC");
@@ -208,6 +212,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   async function signOut() {
     setSigningOut(true);
+
+    if (nativeApp) {
+      try {
+        const { GoogleSignIn } = await import("@capawesome/capacitor-google-sign-in");
+        await GoogleSignIn.signOut();
+      } catch {
+        // Server logout remains authoritative even if native credential cleanup fails.
+      }
+    }
     const active = await getActiveUser();
     const online = navigator.onLine;
 
@@ -235,6 +248,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   async function installApp() {
     setDrawerOpen(false);
+    if (nativeApp) {
+      setFeedback("You are already using the NextFi Android app.");
+      return;
+    }
     if (!installPrompt) {
       setFeedback("If the install prompt is not available, use your browser menu and choose “Install app” or “Add to Home screen”.");
       return;
@@ -280,7 +297,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="sidebar-foot">
-          <button type="button" className="text-button" onClick={() => void installApp()}>Install NextFi</button>
+          {!nativeApp && <button type="button" className="text-button" onClick={() => void installApp()}>Install NextFi</button>}
           <AppNavLink href="/" offline={offline}>Landing page</AppNavLink>
           <button type="button" className="text-button danger-text" onClick={() => setLogoutOpen(true)}>Log out</button>
         </div>
@@ -374,7 +391,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="drawer-links">
-            <button type="button" onClick={() => void installApp()}>Install app</button>
+            {!nativeApp && <button type="button" onClick={() => void installApp()}>Install app</button>}
             <Link href="/app/help" onClick={() => setDrawerOpen(false)}>Help & feedback</Link>
             <Link href="/privacy" onClick={() => setDrawerOpen(false)}>Privacy</Link>
             <Link href="/terms" onClick={() => setDrawerOpen(false)}>Terms</Link>
