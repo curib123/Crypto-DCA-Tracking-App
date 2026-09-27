@@ -10,8 +10,16 @@ const ASSETS: Record<string, string> = {
   XLM: "stellar",
 };
 
+type CachedMarket = {
+  expiresAt: number;
+  data: Record<string, unknown>;
+};
+
 @Injectable()
 export class MarketService {
+  private readonly cache = new Map<string, CachedMarket>();
+  private readonly ttlMs = 60_000;
+
   async getPrices(symbols: string[], currency: string) {
     const cleanSymbols = [...new Set(symbols.map((value) => value.toUpperCase()))].filter(
       (symbol) => ASSETS[symbol],
@@ -19,25 +27,37 @@ export class MarketService {
 
     if (!cleanSymbols.length) return {};
 
-    const ids = cleanSymbols.map((symbol) => ASSETS[symbol]).join(",");
     const vs = currency.toLowerCase();
-    const key = process.env.COINGECKO_API_KEY;
+    const cacheKey = `${cleanSymbols.sort().join(",")}:${vs}`;
+    const cached = this.cache.get(cacheKey);
+
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+
+    const ids = cleanSymbols.map((symbol) => ASSETS[symbol]).join(",");
     const endpoint = new URL("https://api.coingecko.com/api/v3/simple/price");
 
     endpoint.searchParams.set("ids", ids);
     endpoint.searchParams.set("vs_currencies", vs);
     endpoint.searchParams.set("include_24hr_change", "true");
+    endpoint.searchParams.set("include_last_updated_at", "true");
 
+    // Deliberately uses CoinGecko's Demo/Keyless endpoint so the app has
+    // no required paid market-data subscription.
     const response = await fetch(endpoint, {
-      headers: key ? { "x-cg-demo-api-key": key } : {},
       signal: AbortSignal.timeout(5000),
+      headers: {
+        "accept": "application/json",
+        "user-agent": "Crypto-DCA-Tracking-App/1.0",
+      },
     });
 
     if (!response.ok) throw new Error("Market provider unavailable");
 
     const data = (await response.json()) as Record<string, Record<string, number>>;
 
-    return Object.fromEntries(
+    const normalized = Object.fromEntries(
       cleanSymbols.map((symbol) => {
         const row = data[ASSETS[symbol]] || {};
         return [
@@ -47,10 +67,18 @@ export class MarketService {
             price: Number(row[vs] || 0),
             change24h: Number(row[`${vs}_24h_change`] || 0),
             currency: currency.toUpperCase(),
+            lastUpdatedAt: Number(row.last_updated_at || 0),
           },
         ];
       }),
     );
+
+    this.cache.set(cacheKey, {
+      expiresAt: Date.now() + this.ttlMs,
+      data: normalized,
+    });
+
+    return normalized;
   }
 }
 
@@ -65,7 +93,7 @@ export class MarketController {
   ) {
     try {
       return {
-        source: "CoinGecko",
+        source: "CoinGecko Demo/Keyless",
         prices: await this.market.getPrices(symbols.split(","), currency),
         fetchedAt: new Date().toISOString(),
       };
