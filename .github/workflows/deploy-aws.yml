@@ -79,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           port="${AWS_SSH_PORT:-22}"
-          user="${AWS_EC2_USER:-ubuntu}"
+          user="${AWS_EC2_USER:-ec2-user}"
 
           ssh -i ~/.ssh/aws_key -p "$port"             "$user@$AWS_EC2_HOST"             'bash -s' < scripts/deploy/bootstrap-docker.sh
 
@@ -89,7 +89,7 @@ jobs:
         run: |
           set -euo pipefail
           port="${AWS_SSH_PORT:-22}"
-          user="${AWS_EC2_USER:-ubuntu}"
+          user="${AWS_EC2_USER:-ec2-user}"
 
           ssh -i ~/.ssh/aws_key -p "$port"             "$user@$AWS_EC2_HOST"             'bash -s' < scripts/aws/prepare-t4g.sh
 
@@ -99,7 +99,7 @@ jobs:
         run: |
           set -euo pipefail
           port="${AWS_SSH_PORT:-22}"
-          user="${AWS_EC2_USER:-ubuntu}"
+          user="${AWS_EC2_USER:-ec2-user}"
 
           ssh -i ~/.ssh/aws_key -p "$port"             "$user@$AWS_EC2_HOST"             'mkdir -p "$HOME/nextfi"'
 
@@ -112,7 +112,7 @@ jobs:
         run: |
           set -euo pipefail
           port="${AWS_SSH_PORT:-22}"
-          user="${AWS_EC2_USER:-ubuntu}"
+          user="${AWS_EC2_USER:-ec2-user}"
 
           printf '%s\n' "$AWS_ENV_FILE" |
           ssh -i ~/.ssh/aws_key -p "$port"             "$user@$AWS_EC2_HOST"             'umask 077; cat > "$HOME/nextfi/.env"; chmod 600 "$HOME/nextfi/.env"'
@@ -123,7 +123,7 @@ jobs:
         run: |
           set -euo pipefail
           port="${AWS_SSH_PORT:-22}"
-          user="${AWS_EC2_USER:-ubuntu}"
+          user="${AWS_EC2_USER:-ec2-user}"
 
           ssh -i ~/.ssh/aws_key -p "$port"             "$user@$AWS_EC2_HOST"             'cd "$HOME/nextfi" && bash scripts/deploy/remote-deploy.sh'
 
