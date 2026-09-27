@@ -478,3 +478,12 @@ Every push or merge to `production` runs the complete CI suite. Oracle deploymen
 The manual Oracle deployment action remains available and deploys the current `production` branch.
 
 See `docs/ORACLE_DEPLOYMENT.md` for the Oracle secrets, DNS, firewall, Google OAuth, and release setup.
+
+
+## AWS Free Tier / T4g deployment
+
+NextFi can also deploy the `production` branch to an AWS EC2 `t4g.small` ARM64 instance.
+
+The AWS workflow uses the same safety gate as Oracle: full CI must pass on `production` before deployment starts, and the exact tested commit SHA is deployed. A manual deployment action remains available.
+
+See `docs/AWS_FREE_TIER_DEPLOYMENT.md` for EC2, security-group, DNS, SSH secret, billing-alert, and production environment setup.
