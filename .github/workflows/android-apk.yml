@@ -1,0 +1,70 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: Deployed NextFi URL loaded by the Android shell
+        required: true
+        default: https://web-nextfi.vercel.app
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    env:
+      CAPACITOR_SERVER_URL: ${{ inputs.server_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.17.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate Android project
+        working-directory: apps/mobile
+        run: pnpm exec cap add android
+
+      - name: Sync Capacitor plugins and config
+        working-directory: apps/mobile
+        run: pnpm exec cap sync android
+
+      - name: Build installable debug APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: cp apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk NextFi-android.apk
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NextFi-android-apk
+          path: NextFi-android.apk
+          if-no-files-found: error
+
+      - name: Publish rolling APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest NextFi-android.apk --clobber
+          else
+            gh release create android-latest NextFi-android.apk               --title "NextFi Android APK"               --notes "Installable Android APK built from the current NextFi web client and deployed backend."
+          fi
