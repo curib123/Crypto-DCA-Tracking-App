@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { TransactionType } from "@prisma/client";
-import { calculateAssetPosition } from "@crypto-dca/core";
+import { validateAssetLedger } from "@crypto-dca/core";
 import {
   IsDateString,
   IsEnum,
@@ -155,32 +155,31 @@ export class TransactionsService {
       throw new BadRequestException("A fee transaction requires either asset quantity or a base-currency fee.");
     }
 
-    if (dto.type === TransactionType.SELL) {
-      const existing = await this.prisma.transaction.findMany({
-        where: {
-          userId,
-          assetSymbol,
-          occurredAt: { lte: occurredAt },
-        },
-        orderBy: { occurredAt: "asc" },
-      });
+    const existingAssetLedger = await this.prisma.transaction.findMany({
+      where: { userId, assetSymbol },
+      orderBy: { occurredAt: "asc" },
+    });
 
-      const position = calculateAssetPosition(
-        existing.map((row) => ({
-          id: row.id,
-          type: row.type,
-          quantity: Number(row.quantity),
-          amountBase: Number(row.amountSpent) * Number(row.fxRateToBase),
-          feeBase: Number(row.feeBase),
-          occurredAt: row.occurredAt,
-        })),
-      );
+    const ledgerValidation = validateAssetLedger([
+      ...existingAssetLedger.map((row) => ({
+        id: row.id,
+        type: row.type,
+        quantity: Number(row.quantity),
+        amountBase: Number(row.amountSpent) * Number(row.fxRateToBase),
+        feeBase: Number(row.feeBase),
+        occurredAt: row.occurredAt,
+      })),
+      {
+        type: dto.type,
+        quantity: dto.quantity,
+        amountBase: dto.amountSpent * fxRateToBase,
+        feeBase: dto.feeBase || 0,
+        occurredAt,
+      },
+    ]);
 
-      if (dto.quantity > position.quantity + 1e-12) {
-        throw new BadRequestException(
-          `Cannot sell ${dto.quantity} ${assetSymbol}; tracked holding is ${position.quantity}.`,
-        );
-      }
+    if (!ledgerValidation.valid) {
+      throw new BadRequestException(ledgerValidation.reason || "This transaction would make the asset ledger invalid.");
     }
 
     return this.prisma.transaction.create({
@@ -212,6 +211,32 @@ export class TransactionsService {
   async remove(userId: string, id: string) {
     const row = await this.prisma.transaction.findFirst({ where: { id, userId } });
     if (!row) return { deleted: false };
+
+    const remaining = await this.prisma.transaction.findMany({
+      where: {
+        userId,
+        assetSymbol: row.assetSymbol,
+        id: { not: id },
+      },
+      orderBy: { occurredAt: "asc" },
+    });
+
+    const ledgerValidation = validateAssetLedger(
+      remaining.map((item) => ({
+        id: item.id,
+        type: item.type,
+        quantity: Number(item.quantity),
+        amountBase: Number(item.amountSpent) * Number(item.fxRateToBase),
+        feeBase: Number(item.feeBase),
+        occurredAt: item.occurredAt,
+      })),
+    );
+
+    if (!ledgerValidation.valid) {
+      throw new BadRequestException(
+        `Cannot delete this transaction because a later ledger entry depends on it. ${ledgerValidation.reason || ""}`.trim(),
+      );
+    }
 
     await this.prisma.transaction.delete({ where: { id } });
     return { deleted: true };
