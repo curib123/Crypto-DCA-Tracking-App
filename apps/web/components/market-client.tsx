@@ -73,7 +73,10 @@ export function MarketClient() {
         </section>
       )}
 
-      <p className="market-foot">Source: {source} · refreshed around {updated}</p>
+      <p className="market-foot">
+        Source: <a href="https://www.coingecko.com/" target="_blank" rel="noopener noreferrer">{source}</a>
+        {" · "}refreshed around {updated}
+      </p>
     </div>
   );
 }
