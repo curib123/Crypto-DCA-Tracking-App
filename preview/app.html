@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>NextFi PWA Preview</title>
+  <link rel="stylesheet" href="./preview.css" />
+  <script>
+    (()=>{try{const k="nextfi-preview-theme";const m=localStorage.getItem(k)||"system";const d=m==="dark"||(m==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.dataset.theme=d?"dark":"light"}catch{}})();
+  </script>
+</head>
+<body>
+<div class="preview-banner">DEVELOPMENT UI PREVIEW · MOCK DATA · NO AUTHENTICATION · NOT PRODUCTION</div>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="./index.html"><img src="./nextfi-logo.svg" alt="" /><span>NextFi</span></a>
+    <nav class="side-nav">
+      <a class="active" href="./app.html">Overview</a>
+      <a href="#ledger">Transactions</a>
+      <a href="#market">Market</a>
+      <a href="#insights">AI Insights</a>
+      <a href="#settings">Settings</a>
+    </nav>
+    <div style="position:absolute;left:23px;right:23px;bottom:22px" class="muted">
+      <div class="eyebrow">Demo mode</div>
+      <div style="font-size:11px;margin-top:6px">Mock data only</div>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-topbar">
+      <div><div class="eyebrow">DCA workspace</div><strong>Mobile-priority preview</strong></div>
+      <div style="display:flex;gap:8px;align-items:center"><div class="theme-switch desktop-only" aria-label="Preview theme">
+  <button data-theme-choice="system">System</button>
+  <button data-theme-choice="light">Light</button>
+  <button data-theme-choice="dark">Dark</button>
+</div><a class="button primary" href="#ledger">+ Add DCA</a></div>
+    </header>
+
+    <div class="app-content">
+      <div class="page-head">
+        <div><div class="eyebrow">Portfolio</div><h1>Your DCA overview</h1><div class="muted">Mock portfolio data for layout review.</div></div>
+        <span class="pill">USD · Updated now</span>
+      </div>
+
+      <section class="card portfolio-hero">
+        <div>
+          <div class="eyebrow">Current portfolio value</div>
+          <div class="portfolio-value">$4,842.18</div>
+          <div class="gain" style="font-size:13px;font-weight:700">+$754.18 · +18.42%</div>
+        </div>
+        <div class="portfolio-mini">
+          <div><span>Actual invested</span><strong>$4,088.00</strong></div>
+          <div><span>Fees</span><strong>$22.64</strong></div>
+          <div><span>Realized P/L</span><strong>$118.30</strong></div>
+          <div><span>Assets</span><strong>5</strong></div>
+        </div>
+      </section>
+
+      <section class="metric-grid" style="margin-top:12px">
+        <article class="card metric"><span class="eyebrow">Bitcoin</span><strong>$2,104</strong><p>0.0231 BTC · Avg $81,420</p></article>
+        <article class="card metric"><span class="eyebrow">Ethereum</span><strong>$1,286</strong><p>0.44 ETH · Avg $2,510</p></article>
+        <article class="card metric"><span class="eyebrow">Solana</span><strong>$824</strong><p>4.82 SOL · Avg $149</p></article>
+        <article class="card metric"><span class="eyebrow">Others</span><strong>$628</strong><p>BNB · LINK</p></article>
+      </section>
+
+      <section class="app-grid">
+        <article class="card chart-card">
+          <div class="eyebrow">Portfolio mix</div>
+          <h2 style="margin:8px 0 16px;font-size:18px">Allocation</h2>
+          <div class="chart"><span style="height:88%"></span><span style="height:60%"></span><span style="height:39%"></span><span style="height:28%"></span></div>
+        </article>
+        <article class="card chart-card">
+          <div class="eyebrow">DCA history</div>
+          <h2 style="margin:8px 0 16px;font-size:18px">Contribution trend</h2>
+          <div class="chart"><span style="height:34%"></span><span style="height:48%"></span><span style="height:44%"></span><span style="height:62%"></span><span style="height:58%"></span><span style="height:77%"></span></div>
+        </article>
+      </section>
+
+      <section class="card" id="ledger" style="margin-top:12px">
+        <div class="panel-title"><div class="eyebrow">Ledger</div><h2>Recent transactions</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Asset</th><th>Type</th><th>Quantity</th><th>Price</th><th>Amount</th></tr></thead>
+            <tbody>
+              <tr><td>Sep 26</td><td><strong>BTC</strong></td><td>Buy</td><td>0.00192</td><td>$91,240</td><td>$175.18</td></tr>
+              <tr><td>Sep 13</td><td><strong>ETH</strong></td><td>Buy</td><td>0.066</td><td>$2,720</td><td>$179.52</td></tr>
+              <tr><td>Aug 30</td><td><strong>SOL</strong></td><td>Buy</td><td>1.04</td><td>$164</td><td>$170.56</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="preview-note">This page is a static development preview. The real NextFi PWA still keeps Google authentication, API authorization, offline sync, Mistral integration and portfolio calculations in the production application.</div>
+    </div>
+  </main>
+
+  <nav class="mobile-nav" aria-label="PWA mobile preview navigation">
+    <a class="active" href="./app.html">Home</a><a href="#ledger">Ledger</a><a href="#market">Market</a><a href="#insights">Insights</a><a href="#settings">Settings</a>
+  </nav>
+</div>
+<script src="./preview.js"></script>
+</body></html>
