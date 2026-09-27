@@ -778,3 +778,19 @@
     width: 100%;
   }
 }
+
+
+@media (max-width: 640px) {
+  .help-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .feedback-card .button {
+    width: 100%;
+  }
+}
