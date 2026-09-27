@@ -14,7 +14,10 @@ type Insight = {
 
 @Injectable()
 export class AiInsightsService {
-  private readonly cache = new Map<string, { expiresAt: number; value: any }>();
+  private readonly cache = new Map<
+    string,
+    { expiresAt: number; fingerprint: string; value: any }
+  >();
 
   constructor(
     private readonly portfolio: PortfolioService,
@@ -102,9 +105,6 @@ export class AiInsightsService {
   }
 
   async get(userId: string) {
-    const cached = this.cache.get(userId);
-    if (cached && cached.expiresAt > Date.now()) return cached.value;
-
     const [summary, buys] = await Promise.all([
       this.portfolio.summary(userId),
       this.prisma.transaction.findMany({
@@ -114,7 +114,33 @@ export class AiInsightsService {
       }),
     ]);
 
-    const insights = this.deterministic(summary, buys.map((row) => row.occurredAt));
+    const buyDates = buys.map((row) => row.occurredAt);
+    const insights = this.deterministic(summary, buyDates);
+    const fingerprint = JSON.stringify({
+      currency: summary.currency,
+      totals: summary.totals,
+      assets: summary.assets.map((asset: any) => ({
+        symbol: asset.symbol,
+        quantity: asset.quantity,
+        averageEntry: asset.averageEntry,
+        currentPrice: asset.currentPrice,
+        currentValue: asset.currentValue,
+        returnPct: asset.returnPct,
+        totalFees: asset.totalFees,
+        buyCount: asset.buyCount,
+      })),
+      buys: buyDates.map((date) => date.toISOString()),
+    });
+
+    const cached = this.cache.get(userId);
+    if (
+      cached &&
+      cached.expiresAt > Date.now() &&
+      cached.fingerprint === fingerprint
+    ) {
+      return cached.value;
+    }
+
     const mistralResponse = await this.mistralNarrative(summary, insights);
     const value = {
       generatedAt: new Date().toISOString(),
@@ -127,7 +153,11 @@ export class AiInsightsService {
         "These observations describe your tracked data. They are not financial advice, price predictions, or trade instructions.",
     };
 
-    this.cache.set(userId, { expiresAt: Date.now() + 10 * 60 * 1000, value });
+    this.cache.set(userId, {
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      fingerprint,
+      value,
+    });
     return value;
   }
 }
