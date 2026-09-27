@@ -10,6 +10,10 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { MarketModule } from "./modules/market/market.module";
 import { PortfolioModule } from "./modules/portfolio/portfolio.module";
 import { TransactionsModule } from "./modules/transactions/transactions.module";
+import { SettingsModule } from "./modules/settings/settings.module";
+import { ContentModule } from "./modules/content/content.module";
+import { AdminModule } from "./modules/admin/admin.module";
+import { AiModule } from "./modules/ai/ai.module";
 
 @Module({
   imports: [
@@ -37,6 +41,10 @@ import { TransactionsModule } from "./modules/transactions/transactions.module";
     MarketModule,
     PortfolioModule,
     TransactionsModule,
+    SettingsModule,
+    ContentModule,
+    AdminModule,
+    AiModule,
   ],
   controllers: [HealthController],
   providers: [
