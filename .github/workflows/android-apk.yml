@@ -1,6 +1,15 @@
 name: Android APK
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "apps/mobile/**"
+      - "apps/web/components/google-sign-in.tsx"
+      - "apps/web/components/install-button.tsx"
+      - "apps/web/package.json"
+      - "package.json"
+      - ".github/workflows/android-apk.yml"
   workflow_dispatch:
     inputs:
       server_url:
