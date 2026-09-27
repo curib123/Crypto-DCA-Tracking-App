@@ -20,6 +20,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  IsUUID,
   MaxLength,
   Min,
 } from "class-validator";
@@ -76,6 +77,10 @@ export class CreateTransactionDto {
   @MaxLength(500)
   notes?: string;
 
+  @IsOptional()
+  @IsUUID()
+  clientReference?: string;
+
   @IsDateString()
   occurredAt!: string;
 }
@@ -94,6 +99,13 @@ export class TransactionsService {
   async create(userId: string, dto: CreateTransactionDto) {
     const assetSymbol = dto.assetSymbol.trim().toUpperCase();
     const occurredAt = new Date(dto.occurredAt);
+
+    if (dto.clientReference) {
+      const existingReference = await this.prisma.transaction.findFirst({
+        where: { userId, clientReference: dto.clientReference },
+      });
+      if (existingReference) return existingReference;
+    }
 
     if (occurredAt.getTime() > Date.now() + 5 * 60 * 1000) {
       throw new BadRequestException(
@@ -174,6 +186,7 @@ export class TransactionsService {
         exchange: dto.exchange?.trim() || null,
         wallet: dto.wallet?.trim() || null,
         notes: dto.notes?.trim() || null,
+        clientReference: dto.clientReference || null,
         occurredAt,
       },
     });
