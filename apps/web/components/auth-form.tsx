@@ -6,7 +6,6 @@ import { FormEvent, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
 type AuthResponse = {
-  accessToken: string;
   user: { id: string; email: string; baseCurrency: string };
 };
 
@@ -37,9 +36,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         false,
       );
 
-      localStorage.setItem("crypto-dca-token", result.accessToken);
-      localStorage.setItem("crypto-dca-user", JSON.stringify(result.user));
+      void result.user;
       router.push("/app");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to continue.");
     } finally {
