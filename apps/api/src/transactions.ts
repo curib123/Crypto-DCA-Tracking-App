@@ -99,6 +99,20 @@ export class TransactionsService {
   async create(userId: string, dto: CreateTransactionDto) {
     const assetSymbol = dto.assetSymbol.trim().toUpperCase();
     const occurredAt = new Date(dto.occurredAt);
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { baseCurrency: true },
+    });
+    const quoteCurrency = dto.quoteCurrency.trim().toUpperCase();
+    const sameCurrency = quoteCurrency === user.baseCurrency.toUpperCase();
+
+    if (!sameCurrency && dto.fxRateToBase === undefined) {
+      throw new BadRequestException(
+        `FX rate is required when ${quoteCurrency} differs from base currency ${user.baseCurrency}.`,
+      );
+    }
+
+    const fxRateToBase = sameCurrency ? 1 : dto.fxRateToBase!;
 
     if (dto.clientReference) {
       const existingReference = await this.prisma.transaction.findFirst({
@@ -180,8 +194,8 @@ export class TransactionsService {
               : 0,
         ),
         amountSpent: String(dto.amountSpent),
-        quoteCurrency: dto.quoteCurrency.trim().toUpperCase(),
-        fxRateToBase: String(dto.fxRateToBase || 1),
+        quoteCurrency,
+        fxRateToBase: String(fxRateToBase),
         feeBase: String(dto.feeBase || 0),
         exchange: dto.exchange?.trim() || null,
         wallet: dto.wallet?.trim() || null,
