@@ -73,15 +73,15 @@ export function calculateAssetPosition(input: LedgerTransaction[]): AssetPositio
     if (
       row.type === "AIRDROP" ||
       row.type === "REWARD" ||
-      row.type === "STAKING_REWARD" ||
-      row.type === "TRANSFER_IN"
+      row.type === "STAKING_REWARD"
     ) {
       quantity += Math.max(0, qty);
       continue;
     }
 
-    if (row.type === "TRANSFER_OUT") {
-      quantity = Math.max(0, quantity - Math.max(0, qty));
+    // Transfers only change custody/location. The aggregate portfolio position
+    // must not gain/lose quantity or cost basis when crypto moves between wallets.
+    if (row.type === "TRANSFER_IN" || row.type === "TRANSFER_OUT") {
       continue;
     }
 
