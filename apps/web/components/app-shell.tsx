@@ -104,8 +104,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         void warmOfflineRoutes();
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
-          const active = await getActiveUser();
-          if (active) await clearUserOfflineData(active.id);
+          // Preserve cached/queued data across session expiry so offline entries
+          // are not lost. Explicit sign-out is the action that clears device data.
           await clearActiveUser();
           if (mounted) router.replace("/login");
           return;
