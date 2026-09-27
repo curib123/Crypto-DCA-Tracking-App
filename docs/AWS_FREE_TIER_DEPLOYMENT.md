@@ -7,7 +7,7 @@ NextFi can deploy to an AWS EC2 ARM64 instance from the existing `production` br
 For the current AWS Graviton trial, use:
 
 - Region: **Asia Pacific (Singapore) / ap-southeast-1** when available
-- AMI: **Ubuntu Server 24.04 LTS ARM64**
+- AMI: **Amazon Linux 2023 ARM64** or **Ubuntu Server 24.04 LTS ARM64**
 - Instance type: **t4g.small**
 - Storage: **20–30 GB gp3**
 - Architecture: **ARM64 / Graviton2**
@@ -20,7 +20,7 @@ NextFi's Node, PostgreSQL, Caddy, and Alpine-based container images support ARM6
 
 Open AWS Console → EC2 → Launch instance.
 
-Choose Ubuntu Server 24.04 LTS **ARM64**, then select `t4g.small`.
+Your current instance uses **Amazon Linux 2023**. That is supported. For new instances, choose Amazon Linux 2023 ARM64 or Ubuntu Server 24.04 LTS ARM64, then select `t4g.small`.
 
 Create or select an SSH key pair. Keep the private key private. Do not commit it to Git and do not paste it into chat.
 
@@ -53,7 +53,7 @@ Repository → Settings → Secrets and variables → Actions.
 Create:
 
 - `AWS_EC2_HOST` — EC2 public IPv4 address or public DNS name
-- `AWS_EC2_USER` — optional; defaults to `ubuntu`
+- `AWS_EC2_USER` — optional; defaults to `ec2-user` for Amazon Linux 2023. Use `ubuntu` for Ubuntu AMIs.
 - `AWS_SSH_PRIVATE_KEY` — the private key matching the EC2 key pair
 - `AWS_SSH_PORT` — optional; defaults to `22`
 - `AWS_ENV_FILE` — complete production environment file
@@ -139,3 +139,10 @@ Before leaving the instance running:
 - avoid NAT Gateway, managed load balancers, and unnecessary paid services for this single-instance setup.
 
 The EC2 trial has an end date. Plan to migrate, resize, or accept regular pricing before the offer ends.
+
+
+## Amazon Linux 2023
+
+The deployment bootstrap supports Amazon Linux 2023 directly. It installs the AWS-provided Docker engine package, enables Docker at boot, adds the current SSH user to the Docker group, and installs the Docker Compose CLI plugin when the AMI does not already provide it.
+
+For Amazon Linux 2023, the default SSH user is `ec2-user`.
