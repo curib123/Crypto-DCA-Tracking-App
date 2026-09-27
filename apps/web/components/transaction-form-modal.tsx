@@ -242,7 +242,7 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
         <div className="modal-form-actions">
           <button type="button" className="button button-light" onClick={onClose} disabled={busy}>Cancel</button>
           <button type="submit" className="button button-dark" disabled={busy}>
-            {busy ? "Saving…" : navigator.onLine ? "Save transaction" : "Save offline"}
+            {busy ? "Saving…" : typeof navigator !== "undefined" && !navigator.onLine ? "Save offline" : "Save transaction"}
           </button>
         </div>
       </form>
