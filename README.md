@@ -142,6 +142,7 @@ Offline behavior:
 - Synchronized transaction deletion requires connectivity because ledger integrity must be checked by the server.
 - Authentication secrets are never stored in IndexedDB. The JWT remains in an HttpOnly cookie.
 - Explicit signing out clears that user's cached financial data from the device.
+- If sign-out happens offline, a local pending-logout marker prevents the existing HttpOnly server cookie from silently reactivating the session. The server logout is retried on the next connection.
 - Session expiry does **not** delete cached/pending transactions; the active offline identity is cleared and the user signs in again, after which the same user ID can resume synchronization without losing queued entries.
 
 Authenticated API responses are not placed in the service-worker HTTP cache. Private financial data lives only in the per-user IndexedDB cache used by the application.
