@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 const links = [
   { href: "/app", label: "Overview" },
@@ -16,18 +17,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("crypto-dca-token");
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
-    setReady(true);
+    apiFetch("/auth/me")
+      .then(() => setReady(true))
+      .catch(() => router.replace("/login"));
   }, [router]);
 
-  function signOut() {
-    localStorage.removeItem("crypto-dca-token");
-    localStorage.removeItem("crypto-dca-user");
-    router.push("/");
+  async function signOut() {
+    try {
+      await apiFetch("/auth/logout", { method: "POST" }, false);
+    } finally {
+      router.push("/");
+      router.refresh();
+    }
   }
 
   if (!ready) {
