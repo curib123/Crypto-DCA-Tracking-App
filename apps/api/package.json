@@ -8,7 +8,7 @@
     "start": "node dist/main.js",
     "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node -e \"console.log('API integration tests run in CI against Postgres')\"",
+    "test": "tsx --test test/*.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
