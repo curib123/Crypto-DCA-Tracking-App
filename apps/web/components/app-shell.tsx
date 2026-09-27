@@ -6,8 +6,11 @@ import { useEffect, useState } from "react";
 import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
 import {
   clearActiveUser,
+  clearLogoutPending,
   clearUserOfflineData,
   getActiveUser,
+  isLogoutPending,
+  markLogoutPending,
   pendingTransactions,
   removePending,
   setActiveUser,
@@ -92,6 +95,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     async function verify() {
       try {
+        const pendingLogout = await isLogoutPending();
+
+        if (pendingLogout && navigator.onLine) {
+          try {
+            await apiFetch("/auth/logout", { method: "POST" }, false);
+          } finally {
+            await clearLogoutPending();
+            await clearActiveUser();
+          }
+          if (mounted) router.replace("/login");
+          return;
+        }
+
         const user = await apiFetch<{ id: string; email: string; baseCurrency: string }>("/auth/me");
         await setActiveUser(user);
         await syncOfflineQueue(user.id);
@@ -147,16 +163,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   async function signOut() {
     const active = await getActiveUser();
+    const online = navigator.onLine;
 
     try {
-      if (navigator.onLine) {
+      if (online) {
         await apiFetch("/auth/logout", { method: "POST" }, false);
+        await clearLogoutPending();
+      } else {
+        await markLogoutPending();
       }
     } finally {
       if (active) await clearUserOfflineData(active.id);
       await clearActiveUser();
-      router.push("/");
-      router.refresh();
+
+      if (online) {
+        router.push("/");
+        router.refresh();
+      } else {
+        window.location.assign("/");
+      }
     }
   }
 
