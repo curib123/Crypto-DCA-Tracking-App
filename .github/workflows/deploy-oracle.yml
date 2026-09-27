@@ -2,10 +2,6 @@ name: Deploy to Oracle Free
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [master]
 
 concurrency:
   group: nextfi-oracle-production
@@ -16,12 +12,7 @@ permissions:
 
 jobs:
   deploy:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'master')
     runs-on: ubuntu-latest
-    environment: production
     env:
       ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
       ORACLE_USER: ${{ secrets.ORACLE_USER }}
@@ -36,6 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=0
+
           for key in ORACLE_HOST ORACLE_USER ORACLE_SSH_PRIVATE_KEY ORACLE_ENV_FILE; do
             if [[ -z "${!key:-}" ]]; then
               echo "::warning::$key is not configured. Oracle deployment will be skipped."
@@ -62,8 +54,7 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s
-' "$ORACLE_SSH_PRIVATE_KEY" > ~/.ssh/oracle_key
+          printf '%s\n' "$ORACLE_SSH_PRIVATE_KEY" > ~/.ssh/oracle_key
           chmod 600 ~/.ssh/oracle_key
 
           port="${ORACLE_SSH_PORT:-22}"
@@ -97,8 +88,7 @@ jobs:
           set -euo pipefail
           port="${ORACLE_SSH_PORT:-22}"
 
-          printf '%s
-' "$ORACLE_ENV_FILE" |
+          printf '%s\n' "$ORACLE_ENV_FILE" |
           ssh -i ~/.ssh/oracle_key -p "$port"             "$ORACLE_USER@$ORACLE_HOST"             'umask 077; cat > "$HOME/nextfi/.env"; chmod 600 "$HOME/nextfi/.env"'
 
       - name: Deploy NextFi
@@ -113,4 +103,4 @@ jobs:
       - name: Deployment not configured
         if: steps.config.outputs.ready != 'true'
         run: |
-          echo "Oracle deployment workflow is ready, but repository production secrets are not configured yet."
+          echo "Oracle deployment workflow is ready, but production secrets are not configured yet."
