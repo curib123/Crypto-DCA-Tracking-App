@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { Throttle } from "@nestjs/throttler";
 import { IsEmail, IsIn, IsOptional, IsString, MinLength } from "class-validator";
 import bcrypt from "bcryptjs";
 import { PrismaService } from "./prisma.service";
@@ -152,6 +153,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post("register")
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) response: any) {
     const result = await this.auth.register(dto);
     setSessionCookie(response, result.token);
@@ -159,6 +161,7 @@ export class AuthController {
   }
 
   @Post("login")
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: any) {
     const result = await this.auth.login(dto);
     setSessionCookie(response, result.token);
