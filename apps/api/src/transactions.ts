@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,6 +11,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { TransactionType } from "@prisma/client";
+import { calculateAssetPosition } from "@crypto-dca/core";
 import {
   IsDateString,
   IsEnum,
@@ -87,11 +89,37 @@ export class TransactionsService {
     });
   }
 
-  create(userId: string, dto: CreateTransactionDto) {
+  async create(userId: string, dto: CreateTransactionDto) {
+    const assetSymbol = dto.assetSymbol.trim().toUpperCase();
+
+    if (dto.type === TransactionType.SELL) {
+      const existing = await this.prisma.transaction.findMany({
+        where: { userId, assetSymbol },
+        orderBy: { occurredAt: "asc" },
+      });
+
+      const position = calculateAssetPosition(
+        existing.map((row) => ({
+          id: row.id,
+          type: row.type,
+          quantity: Number(row.quantity),
+          amountBase: Number(row.amountSpent) * Number(row.fxRateToBase),
+          feeBase: Number(row.feeBase),
+          occurredAt: row.occurredAt,
+        })),
+      );
+
+      if (dto.quantity > position.quantity + 1e-12) {
+        throw new BadRequestException(
+          `Cannot sell ${dto.quantity} ${assetSymbol}; tracked holding is ${position.quantity}.`,
+        );
+      }
+    }
+
     return this.prisma.transaction.create({
       data: {
         userId,
-        assetSymbol: dto.assetSymbol.trim().toUpperCase(),
+        assetSymbol,
         type: dto.type,
         quantity: String(dto.quantity),
         unitPrice: String(dto.unitPrice),
