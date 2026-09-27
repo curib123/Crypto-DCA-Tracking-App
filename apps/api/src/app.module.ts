@@ -14,6 +14,7 @@ import { SettingsModule } from "./modules/settings/settings.module";
 import { ContentModule } from "./modules/content/content.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { AiModule } from "./modules/ai/ai.module";
+import { AdsModule } from "./modules/ads/ads.module";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AiModule } from "./modules/ai/ai.module";
     ContentModule,
     AdminModule,
     AiModule,
+    AdsModule,
   ],
   controllers: [HealthController],
   providers: [
