@@ -56,15 +56,20 @@ function AppNavLink({
   href,
   className,
   offline,
+  active = false,
   children,
 }: {
   href: string;
   className?: string;
   offline: boolean;
+  active?: boolean;
   children: React.ReactNode;
 }) {
-  if (offline) return <a href={href} className={className}>{children}</a>;
-  return <Link href={href} className={className}>{children}</Link>;
+  const ariaCurrent = active ? "page" : undefined;
+  if (offline) {
+    return <a href={href} className={className} aria-current={ariaCurrent}>{children}</a>;
+  }
+  return <Link href={href} className={className} aria-current={ariaCurrent}>{children}</Link>;
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -72,7 +77,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [offline, setOffline] = useState(false);
-  const [user, setUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -114,7 +118,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         await syncOfflineQueue(nextUser.id);
 
         if (mounted) {
-          setUser(nextUser);
           setOffline(false);
           setReady(true);
         }
@@ -199,6 +202,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={link.href}
                 offline={offline}
                 className={active ? "active" : undefined}
+                active={active}
               >
                 <span className="nav-icon"><NavIcon name={link.icon} /></span>
                 <span>{link.label}</span>
