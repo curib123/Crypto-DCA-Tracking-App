@@ -9,7 +9,9 @@ A mobile-first Progressive Web App for tracking real crypto DCA contributions, w
 - Admin-managed landing copy, features, FAQ, footer, and SEO metadata
 - Theme-aware Chart.js portfolio and admin analytics
 - Optional AI-assisted portfolio explanations backed by deterministic ledger calculations
-- Admin dashboard, user management, suspension controls, RBAC, and audit log
+- Secure username/password control panel with forced bootstrap-password change and login lockout
+- Admin dashboard, user management, suspension controls, per-user ad policy, and audit log
+- Google AdSense integration prepared but OFF by default, with global/all-user/selected-user controls
 - Installable PWA manifest + service worker
 - Google-friendly metadata, canonical URL, robots, sitemap, FAQ JSON-LD, and SoftwareApplication JSON-LD
 - Google Identity Services sign-in only; no application password database
@@ -147,24 +149,59 @@ The backend verifies every Google ID token and persists Google's stable `sub` cl
 This selected ID-token flow does **not** require a Google client secret in the repository or Docker environment.
 
 
-## Admin access
+## Secure control-panel access
 
-Admin authorization is enforced on the API, not only in the UI. Bootstrap one or more administrators with a comma-separated list of verified Google account emails:
+The customer app still uses Google sign-in, but the **control panel uses a completely separate username/password session**. Google user roles do not grant control-panel access.
+
+For development only, the bootstrap credentials default to:
 
 ```
-ADMIN_EMAILS=you@example.com,second-admin@example.com
+CONTROL_PANEL_USERNAME=admin
+CONTROL_PANEL_PASSWORD=pass
 ```
 
-After an account receives the `ADMIN` role, the NextFi app exposes the Admin link. The admin control panel includes:
+The first control-panel login is forced to change the bootstrap password before any admin API can be used. New passwords must be at least 12 characters and include uppercase, lowercase, a number, and a symbol.
 
-- user growth and recent activity analytics
-- transaction activity and popular-asset charts
-- searchable/paginated user management
-- activate/suspend and USER/ADMIN role controls
-- landing-page CMS and SEO fields
-- administrator audit logs
+Production intentionally refuses to start when the bootstrap password is still `pass`, is shorter than 12 characters, or when a separate control-panel signing secret is not configured:
 
-An admin cannot suspend or demote their own account through the control panel. Suspended users are rejected at sign-in and by authenticated API guards.
+```
+CONTROL_PANEL_USERNAME=your-admin-name
+CONTROL_PANEL_PASSWORD=<strong-bootstrap-password>
+CONTROL_PANEL_JWT_SECRET=<different-random-secret-at-least-32-characters>
+```
+
+The control panel uses a separate short-lived HttpOnly, Secure, SameSite=Strict cookie. Failed logins are rate-limited and five consecutive failures temporarily lock the account. The bootstrap env password is used only to create the initial database admin record; password changes are stored as a salted scrypt hash.
+
+Control-panel pages are noindex/noarchive, served with no-store headers, and production browser source maps are disabled. Frontend JavaScript can never be made impossible to inspect, so authorization, credentials, ad policy, and sensitive business rules remain server-side.
+
+## Google AdSense setup
+
+AdSense is **wired but disabled by default**. Put only the AdSense publisher identifiers in environment configuration:
+
+```
+ADSENSE_CLIENT_ID=ca-pub-1234567890123456
+ADSENSE_APP_SLOT_ID=1234567890
+ADSENSE_LANDING_SLOT_ID=9876543210
+```
+
+The control panel at `/admin/ads` can then control:
+
+- master ON/OFF for every ad request
+- signed-in app ads ON/OFF
+- landing-page ads ON/OFF
+- all inherited users ON/OFF
+- individual user override: Inherit / Force on / Force off
+
+This makes two common modes easy:
+
+- **Selected users only:** master ON + app ON + default users OFF, then set chosen users to Force on.
+- **All users except exclusions:** master ON + app ON + default users ON, then set chosen users to Force off.
+
+The PWA refreshes its effective ad policy periodically and when the tab becomes visible, so per-user changes do not require redeploying the app.
+
+NextFi serves `/ads.txt` automatically when a valid `ADSENSE_CLIENT_ID` is configured. The AdSense loader is injected only after the server says the current placement/user is enabled. Portfolio holdings, transactions, and AI insight content are not passed to NextFi's AdSense policy layer.
+
+Before serving personalized ads in jurisdictions where consent is required, configure the appropriate Google-certified consent management flow in AdSense Privacy & messaging.
 
 ## Mistral AI insights
 
@@ -324,6 +361,9 @@ POSTGRES_DB=crypto_dca
 POSTGRES_USER=crypto_dca
 POSTGRES_PASSWORD=<strong-random-password>
 JWT_SECRET=<long-random-secret-at-least-32-characters>
+CONTROL_PANEL_USERNAME=<admin-username>
+CONTROL_PANEL_PASSWORD=<strong-bootstrap-password>
+CONTROL_PANEL_JWT_SECRET=<separate-long-random-secret>
 GOOGLE_CLIENT_ID=<google-web-client-id.apps.googleusercontent.com>
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=<google-web-client-id.apps.googleusercontent.com>
 DEFAULT_BASE_CURRENCY=USD
@@ -370,6 +410,11 @@ The production API runs the checked-in Prisma migrations before starting.
 - Google ID tokens are verified server-side and are not persisted as application sessions
 - JWT sessions are stored in HttpOnly, SameSite cookies rather than browser localStorage
 - JWT-protected portfolio/transaction routes
+- Separate control-panel authentication and signing secret
+- Salted scrypt control-panel password hashes
+- Forced first-login password change, brute-force throttling, and temporary lockout
+- Server-side authorization for every admin mutation
+- Control-panel audit logging
 - DTO validation and unknown-field rejection
 - CORS origin configuration
 - HTTPS in production
@@ -377,6 +422,8 @@ The production API runs the checked-in Prisma migrations before starting.
 - Security headers at Next.js and Caddy layers
 - No wallet seed phrase or private-key collection
 - No crypto custody or trade execution
+- Production browser source maps disabled; no secrets or admin authorization logic trusted to the client
+- AdSense master switch defaults OFF and effective ad decisions are made server-side
 
 Before a larger commercial launch, add formal privacy/terms review, centralized audit/event storage, monitored backups, observability, and—if multiple API replicas are introduced—a shared rate-limit/cache layer.
 
