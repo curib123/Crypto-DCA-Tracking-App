@@ -8,7 +8,7 @@ A mobile-first Progressive Web App for tracking real crypto DCA contributions, w
 - Installable PWA manifest + service worker
 - Google-friendly metadata, canonical URL, robots, sitemap, FAQ JSON-LD, and SoftwareApplication JSON-LD
 - Email/password registration and login
-- JWT-protected app routes
+- HttpOnly-cookie JWT-protected app routes
 - PostgreSQL transaction ledger
 - Weighted DCA cost-basis engine
 - BUY / SELL / TRANSFER / REWARD / AIRDROP / FEE transaction types
@@ -152,6 +152,19 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com
 
 After deployment, add the domain to Google Search Console, submit `/sitemap.xml`, and validate structured data with Google's Rich Results Test.
 
+## Zero-cost operating mode
+
+The default project is intentionally designed to run without a paid SaaS dependency:
+
+- Next.js, NestJS, PostgreSQL, Prisma, Caddy, Docker, and pnpm are used without a required paid service.
+- Market prices use CoinGecko's Demo/Keyless endpoint; no Pro API key is required.
+- The default runtime does not require Redis, a managed database, a paid auth service, an email provider, analytics, ads, or a payment gateway.
+- GitHub Actions is used only for repository CI; this repository is public.
+- Oracle Cloud Always Free can host the Docker stack when your tenancy has eligible capacity and you remain inside the current Always Free limits.
+- A custom paid domain is **not required**. You can use a free DNS subdomain such as DuckDNS and set `APP_DOMAIN=your-name.duckdns.org` for Caddy HTTPS.
+
+Zero-cost does **not** mean unlimited. Free providers can impose quotas, rate limits, capacity limits, or policy changes. Oracle also documents reclamation rules for idle Always Free compute, so keep backups outside the VM.
+
 ## Oracle Cloud deployment
 
 Recommended shape:
@@ -166,10 +179,9 @@ Caddy :80/:443
    └── NestJS /api
           ↓
       PostgreSQL
-      Redis
 ```
 
-Only ports **80/443** should be public for the application. Do not expose PostgreSQL `5432` or Redis `6379` publicly.
+Only ports **80/443** should be public for the application. Do not expose PostgreSQL `5432` publicly.
 
 ### 1. Prepare the VM
 
@@ -197,10 +209,9 @@ POSTGRES_DB=crypto_dca
 POSTGRES_USER=crypto_dca
 POSTGRES_PASSWORD=<strong-random-password>
 JWT_SECRET=<long-random-secret>
-COINGECKO_API_KEY=<optional>
 ```
 
-Point the domain's DNS A/AAAA record to the VM before starting Caddy.
+Point the domain's DNS A/AAAA record to the VM before starting Caddy. For a zero-cost setup, a free DuckDNS subdomain can be used instead of purchasing a domain.
 
 ### 3. Deploy
 
@@ -222,11 +233,12 @@ The production API runs the checked-in Prisma migrations before starting.
 ## Security baseline
 
 - Passwords are hashed with bcrypt
+- JWT sessions are stored in HttpOnly, SameSite cookies rather than browser localStorage
 - JWT-protected portfolio/transaction routes
 - DTO validation and unknown-field rejection
 - CORS origin configuration
 - HTTPS in production
-- PostgreSQL/Redis are internal in production Compose
+- PostgreSQL is internal in production Compose
 - Security headers at Next.js and Caddy layers
 - No wallet seed phrase or private-key collection
 - No crypto custody or trade execution
@@ -235,7 +247,7 @@ Before a public commercial launch, add refresh-token rotation, email verificatio
 
 ## Market data
 
-The API currently uses CoinGecko's simple price endpoint for supported assets:
+The API uses CoinGecko's **Demo/Keyless** simple-price endpoint, so no paid market-data key is required. A 60-second in-memory cache reduces calls to the free endpoint. Supported assets:
 
 - BTC
 - ETH
