@@ -32,3 +32,13 @@ test("wallet transfers do not change aggregate quantity or cost basis", () => {
   assert.equal(result.remainingCostBasis, 100);
   assert.equal(result.averageEntry, 100);
 });
+
+
+test("oversized sell data cannot inflate realized pnl", () => {
+  const result = calculateAssetPosition([
+    { type: "BUY", quantity: 1, amountBase: 100, feeBase: 0, occurredAt: "2026-01-01" },
+    { type: "SELL", quantity: 2, amountBase: 300, feeBase: 0, occurredAt: "2026-01-02" },
+  ]);
+  assert.equal(result.quantity, 0);
+  assert.equal(result.realizedPnl, 50);
+});
