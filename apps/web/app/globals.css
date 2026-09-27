@@ -1366,3 +1366,29 @@ tbody tr:last-child td {
     display: flex;
   }
 }
+
+
+.google-auth {
+  margin-top: 28px;
+  display: grid;
+  gap: 12px;
+}
+
+.google-button {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  transition: opacity .16s ease;
+}
+
+.google-button.is-busy {
+  opacity: .55;
+  pointer-events: none;
+}
+
+.auth-status {
+  margin: 0;
+  color: #777;
+  text-align: center;
+  font-size: 11px;
+}
