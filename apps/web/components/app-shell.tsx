@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
-import { ThemeControl } from "@/components/theme-control";
+import { applyTheme, ThemeControl } from "@/components/theme-control";
 import {
   clearActiveUser,
   clearLogoutPending,
@@ -111,6 +111,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }
 
         const nextUser = await apiFetch<SessionUser>("/auth/me");
+        if (!localStorage.getItem("nextfi-theme")) {
+          localStorage.setItem("nextfi-theme", nextUser.themePreference);
+          applyTheme(nextUser.themePreference);
+        }
         await setActiveUser(nextUser);
         await syncOfflineQueue(nextUser.id);
 
