@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { API_URL, formatMoney } from "@/lib/api";
+import { cacheMarket, getCachedMarket } from "@/lib/offline";
 
 type PriceRow = {
   symbol: string;
@@ -10,25 +11,79 @@ type PriceRow = {
   currency: string;
 };
 
+type MarketSnapshot = {
+  source: string;
+  prices: Record<string, PriceRow>;
+  fetchedAt: string;
+};
+
 export function MarketClient() {
   const [currency, setCurrency] = useState("USD");
   const [rows, setRows] = useState<PriceRow[]>([]);
   const [source, setSource] = useState("Loading…");
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_URL}/market/prices?currency=${encodeURIComponent(currency)}`, { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data) => {
-        setRows(Object.values(data.prices || {}));
-        setSource(data.source || "Unknown");
-      })
-      .catch(() => {
-        setRows([]);
-        setSource("Unavailable");
-      });
-  }, [currency]);
+    let mounted = true;
 
-  const updated = useMemo(() => new Date().toLocaleTimeString(), [rows]);
+    async function load() {
+      const cached = await getCachedMarket<MarketSnapshot>(currency);
+
+      if (cached && mounted) {
+        setRows(Object.values(cached.value.prices || {}));
+        setSource(cached.value.source || "Cached market data");
+        setUpdatedAt(cached.value.fetchedAt || cached.updatedAt);
+        setOffline(!navigator.onLine);
+      }
+
+      if (!navigator.onLine) {
+        if (mounted) setOffline(true);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_URL}/market/prices?currency=${encodeURIComponent(currency)}`,
+          { cache: "no-store", credentials: "include" },
+        );
+
+        if (!response.ok) throw new Error("Market request failed");
+
+        const data = (await response.json()) as MarketSnapshot;
+        await cacheMarket(currency, data);
+
+        if (mounted) {
+          setRows(Object.values(data.prices || {}));
+          setSource(data.source || "Unknown");
+          setUpdatedAt(data.fetchedAt || new Date().toISOString());
+          setOffline(false);
+        }
+      } catch {
+        if (mounted) {
+          setOffline(true);
+          if (!cached) {
+            setRows([]);
+            setSource("Unavailable");
+            setUpdatedAt(null);
+          }
+        }
+      }
+    }
+
+    load();
+
+    const onOnline = () => load();
+    const onOffline = () => setOffline(true);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, [currency]);
 
   return (
     <div className="app-page">
@@ -36,16 +91,23 @@ export function MarketClient() {
         <div>
           <span className="eyebrow">Market</span>
           <h1>Prices for context, not impulse.</h1>
-          <p>Compare the market with your own average entry on the Overview screen.</p>
+          <p>
+            {offline
+              ? "Showing the last synchronized market snapshot."
+              : "Compare the market with your own average entry on the Overview screen."}
+          </p>
         </div>
-        <label className="inline-select">
-          Display
-          <select value={currency} onChange={(event) => setCurrency(event.target.value)}>
-            {["USD","PHP","EUR","GBP","AUD","CAD","SGD","JPY","KRW","MYR","IDR","THB"].map(
-              (item) => <option key={item}>{item}</option>,
-            )}
-          </select>
-        </label>
+        <div className="heading-statuses">
+          {offline && <span className="status-pill">Offline · stale prices</span>}
+          <label className="inline-select">
+            Display
+            <select value={currency} onChange={(event) => setCurrency(event.target.value)}>
+              {["USD","PHP","EUR","GBP","AUD","CAD","SGD","JPY","KRW","MYR","IDR","THB"].map(
+                (item) => <option key={item}>{item}</option>,
+              )}
+            </select>
+          </label>
+        </div>
       </div>
 
       <section className="market-grid">
@@ -68,14 +130,15 @@ export function MarketClient() {
 
       {!rows.length && (
         <section className="panel empty-state">
-          <h2>Market provider is temporarily unavailable.</h2>
-          <p>Your portfolio remains usable because your ledger and cost basis do not depend on live prices.</p>
+          <h2>No synchronized market snapshot is available yet.</h2>
+          <p>Open Market once while online, then the last snapshot will remain readable offline.</p>
         </section>
       )}
 
       <p className="market-foot">
         Source: <a href="https://www.coingecko.com/" target="_blank" rel="noopener noreferrer">{source}</a>
-        {" · "}refreshed around {updated}
+        {updatedAt ? ` · last updated ${new Date(updatedAt).toLocaleString()}` : ""}
+        {offline ? " · offline" : ""}
       </p>
     </div>
   );
