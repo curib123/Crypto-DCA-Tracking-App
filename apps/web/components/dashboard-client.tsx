@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch, formatMoney } from "@/lib/api";
+import { apiFetch, formatMoney, isNetworkFailure } from "@/lib/api";
+import {
+  cacheUserResource,
+  getActiveUser,
+  getCachedUserResource,
+} from "@/lib/offline";
 
 type Asset = {
   symbol: string;
@@ -38,14 +43,72 @@ type Summary = {
 export function DashboardClient() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState("");
+  const [offline, setOffline] = useState(false);
+  const [cachedAt, setCachedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    apiFetch<Summary>("/portfolio/summary")
-      .then(setSummary)
-      .catch((err) => setError(err instanceof Error ? err.message : "Unable to load portfolio."));
+    let mounted = true;
+
+    async function load() {
+      const activeUser = await getActiveUser();
+
+      if (activeUser) {
+        const cached = await getCachedUserResource<Summary>(activeUser.id, "portfolio");
+        if (cached && mounted) {
+          setSummary(cached.value);
+          setCachedAt(cached.updatedAt);
+          setOffline(!navigator.onLine);
+        }
+      }
+
+      if (!navigator.onLine) {
+        if (!activeUser && mounted) setError("No synchronized portfolio is available offline yet.");
+        return;
+      }
+
+      try {
+        const fresh = await apiFetch<Summary>("/portfolio/summary");
+        if (!activeUser) {
+          const latestUser = await getActiveUser();
+          if (latestUser) await cacheUserResource(latestUser.id, "portfolio", fresh);
+        } else {
+          await cacheUserResource(activeUser.id, "portfolio", fresh);
+        }
+
+        if (mounted) {
+          setSummary(fresh);
+          setCachedAt(new Date().toISOString());
+          setOffline(false);
+          setError("");
+        }
+      } catch (err) {
+        if (mounted && !summary) {
+          setError(
+            isNetworkFailure(err)
+              ? "Unable to reach the server and no synchronized portfolio is cached on this device."
+              : err instanceof Error
+                ? err.message
+                : "Unable to load portfolio.",
+          );
+        }
+      }
+    }
+
+    load();
+
+    const onOnline = () => load();
+    const onOffline = () => setOffline(true);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
   }, []);
 
-  if (error) {
+  if (error && !summary) {
     return <div className="app-page"><div className="form-error">{error}</div></div>;
   }
 
@@ -62,14 +125,23 @@ export function DashboardClient() {
         <div>
           <span className="eyebrow">Portfolio overview</span>
           <h1>Your DCA, without the guesswork.</h1>
-          <p>Actual contributions, weighted cost and live value in {currency}.</p>
+          <p>
+            Actual contributions, weighted cost and {offline ? "last synchronized" : "current"} value in {currency}.
+          </p>
         </div>
-        <span className="status-pill">Base currency · {currency}</span>
+        <div className="heading-statuses">
+          {offline && (
+            <span className="status-pill">
+              Offline · cached {cachedAt ? new Date(cachedAt).toLocaleString() : "previously"}
+            </span>
+          )}
+          <span className="status-pill">Base currency · {currency}</span>
+        </div>
       </div>
 
       <section className="hero-metric panel">
         <div>
-          <span className="metric-label">Current portfolio value</span>
+          <span className="metric-label">{offline ? "Last synchronized portfolio value" : "Current portfolio value"}</span>
           <strong className="hero-number">{formatMoney(totals.currentValue, currency)}</strong>
           <span className={positive ? "gain" : "loss"}>
             {positive ? "+" : ""}{formatMoney(totals.lifetimePnl, currency)} · {totals.returnPct.toFixed(2)}%
@@ -108,9 +180,9 @@ export function DashboardClient() {
           <p>Every buy contributes to weighted cost.</p>
         </article>
         <article className="panel metric-card">
-          <span className="metric-label">Market status</span>
-          <strong>{assets.some((asset) => asset.marketSource === "live") ? "Live" : "Fallback"}</strong>
-          <p>Falls back to last entry if the market provider is unavailable.</p>
+          <span className="metric-label">Data status</span>
+          <strong>{offline ? "Offline cache" : assets.some((asset) => asset.marketSource === "live") ? "Live" : "Fallback"}</strong>
+          <p>{offline ? "Reconnect to refresh market-dependent values." : "Falls back to last entry if market data is unavailable."}</p>
         </article>
       </section>
 
