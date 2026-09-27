@@ -8,7 +8,7 @@
     "start": "next start -H 0.0.0.0",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "node -e \"console.log('Web smoke checks run after build')\""
+    "test": "node --check public/sw.js && tsx --test lib/offline.test.ts"
   },
   "dependencies": {
     "next": "16.3.6",
@@ -19,6 +19,8 @@
     "@types/node": "^24.5.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "fake-indexeddb": "^6.2.4",
+    "tsx": "^4.20.6"
   }
 }
