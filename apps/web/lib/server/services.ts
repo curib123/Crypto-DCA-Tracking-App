@@ -1,5 +1,6 @@
 import {
   AdOverride,
+  DcaFrequency,
   TransactionType,
   UserRole,
   UserStatus,
@@ -1231,4 +1232,93 @@ export async function aiInsights(userId: string) {
   });
 
   return value;
+}
+
+
+const DCA_FREQUENCIES = new Set<string>(Object.values(DcaFrequency));
+
+function dcaFrequency(value: unknown) {
+  const clean = asString(value, "DCA frequency", 24).toUpperCase();
+  if (!DCA_FREQUENCIES.has(clean)) {
+    throw new HttpError(400, "Unsupported DCA frequency.");
+  }
+  return clean as DcaFrequency;
+}
+
+function dcaStartDate(value: unknown) {
+  const date = new Date(asString(value, "Start date", 80));
+  if (Number.isNaN(date.getTime())) throw new HttpError(400, "Start date must be a valid date.");
+  return date;
+}
+
+function supportedAsset(value: unknown) {
+  const symbol = asString(value, "Asset symbol", 12).toUpperCase();
+  if (!SUPPORTED_ASSETS[symbol]) throw new HttpError(400, "Unsupported asset.");
+  return symbol;
+}
+
+export function listDcaPlans(userId: string) {
+  return prisma.dcaPlan.findMany({
+    where: { userId },
+    orderBy: [{ enabled: "desc" }, { createdAt: "desc" }],
+  });
+}
+
+export async function createDcaPlan(userId: string, input: Record<string, unknown>) {
+  const assetSymbol = supportedAsset(input.assetSymbol);
+  const amount = asNumber(input.amount, "DCA amount", Number.EPSILON);
+  const quoteCurrency = currency(input.quoteCurrency, "Quote currency");
+  const frequency = dcaFrequency(input.frequency);
+  const startDate = dcaStartDate(input.startDate);
+  const notes = optionalString(input.notes, 300);
+
+  return prisma.dcaPlan.create({
+    data: {
+      userId,
+      assetSymbol,
+      amount: String(amount),
+      quoteCurrency,
+      frequency,
+      startDate,
+      enabled: input.enabled === undefined ? true : Boolean(input.enabled),
+      notes,
+    },
+  });
+}
+
+export async function updateDcaPlan(userId: string, id: string, input: Record<string, unknown>) {
+  const row = await prisma.dcaPlan.findFirst({ where: { id, userId } });
+  if (!row) throw new HttpError(404, "DCA plan not found.");
+
+  const data: {
+    assetSymbol?: string;
+    amount?: string;
+    quoteCurrency?: string;
+    frequency?: DcaFrequency;
+    startDate?: Date;
+    enabled?: boolean;
+    notes?: string | null;
+  } = {};
+
+  if (input.assetSymbol !== undefined) data.assetSymbol = supportedAsset(input.assetSymbol);
+  if (input.amount !== undefined) data.amount = String(asNumber(input.amount, "DCA amount", Number.EPSILON));
+  if (input.quoteCurrency !== undefined) data.quoteCurrency = currency(input.quoteCurrency, "Quote currency");
+  if (input.frequency !== undefined) data.frequency = dcaFrequency(input.frequency);
+  if (input.startDate !== undefined) data.startDate = dcaStartDate(input.startDate);
+  if (input.enabled !== undefined) {
+    if (typeof input.enabled !== "boolean") throw new HttpError(400, "Enabled must be true or false.");
+    data.enabled = input.enabled;
+  }
+  if (input.notes !== undefined) data.notes = optionalString(input.notes, 300);
+
+  if (!Object.keys(data).length) throw new HttpError(400, "No DCA plan changes were provided.");
+
+  return prisma.dcaPlan.update({ where: { id }, data });
+}
+
+export async function removeDcaPlan(userId: string, id: string) {
+  const row = await prisma.dcaPlan.findFirst({ where: { id, userId } });
+  if (!row) return { deleted: false };
+  await prisma.dcaPlan.delete({ where: { id } });
+  return { deleted: true };
 }
