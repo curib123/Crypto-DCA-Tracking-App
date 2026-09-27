@@ -375,6 +375,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="drawer-links">
             <button type="button" onClick={() => void installApp()}>Install app</button>
+            <Link href="/app/help" onClick={() => setDrawerOpen(false)}>Help & feedback</Link>
             <Link href="/privacy" onClick={() => setDrawerOpen(false)}>Privacy</Link>
             <Link href="/terms" onClick={() => setDrawerOpen(false)}>Terms</Link>
             <Link href="/" onClick={() => setDrawerOpen(false)}>About NextFi</Link>
