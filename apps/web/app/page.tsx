@@ -87,7 +87,7 @@ export default async function LandingPage() {
 
             <div className="hero-actions">
               <Link href="/login" className="button button-dark button-large">{content.primaryCtaLabel}</Link>
-              <InstallButton className="button button-light button-large" />
+              <InstallButton className="button button-light button-large" label={content.secondaryCtaLabel} />
             </div>
 
             <div className="trust-row" aria-label="Product principles">
@@ -101,7 +101,7 @@ export default async function LandingPage() {
           <div className="product-preview" aria-label="NextFi dashboard preview">
             <div className="preview-brand">
               <NextFiLogo />
-              <span>NextFi</span>
+              <span>{content.brandName}</span>
             </div>
             <div className="preview-top">
               <div>
@@ -195,14 +195,14 @@ export default async function LandingPage() {
           </div>
           <div className="hero-actions">
             <Link href="/login" className="button button-white button-large">Start free</Link>
-            <InstallButton className="button button-outline-white button-large" />
+            <InstallButton className="button button-outline-white button-large" label={content.secondaryCtaLabel} />
           </div>
         </section>
 
         <footer className="site-footer">
           <Link href="/" className="brand">
             <NextFiLogo />
-            <span>NextFi</span>
+            <span>{content.brandName}</span>
           </Link>
           <p>{content.footerText}</p>
           <div>
