@@ -6,6 +6,7 @@ const PUBLIC_SHELL = [
   "/app/portfolio",
   "/app/transactions",
   "/app/dca-plans",
+  "/app/help",
   "/app/market",
   "/app/insights",
   "/app/settings",
