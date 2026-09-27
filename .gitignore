@@ -8,4 +8,6 @@ dist
 coverage
 *.log
 .DS_Store
-apps/api/prisma/*.db
+.vercel
+.supabase/
+supabase/.temp/

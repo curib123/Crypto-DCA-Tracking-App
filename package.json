@@ -1,24 +1,30 @@
 {
   "name": "crypto-dca-tracking-app",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "packageManager": "pnpm@10.17.1",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "typecheck": "turbo typecheck",
-    "test": "turbo test",
-    "db:generate": "pnpm --filter @crypto-dca/api prisma:generate",
-    "db:migrate": "pnpm --filter @crypto-dca/api prisma:migrate",
-    "db:seed": "pnpm --filter @crypto-dca/api prisma:seed",
-    "docker:dev": "docker compose up --build",
-    "docker:prod": "docker compose -f docker-compose.prod.yml up -d --build"
+    "dev": "turbo dev --filter=@crypto-dca/web",
+    "build": "turbo build --filter=@crypto-dca/web",
+    "lint": "turbo lint --filter=@crypto-dca/web",
+    "typecheck": "turbo typecheck --filter=@crypto-dca/web",
+    "test": "turbo test --filter=@crypto-dca/web",
+    "db:generate": "pnpm --filter @crypto-dca/web prisma:generate",
+    "db:validate": "pnpm --filter @crypto-dca/web prisma:validate",
+    "db:new": "supabase migration new",
+    "db:push": "supabase db push",
+    "db:push:dry-run": "supabase db push --dry-run",
+    "db:status": "supabase migration list",
+    "db:deploy": "supabase db push",
+    "db:seed": "pnpm --filter @crypto-dca/web prisma:seed",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link --project-ref nzjpqochvjsnbqlzsflv"
   },
   "devDependencies": {
+    "supabase": "2.118.0",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2"
   }

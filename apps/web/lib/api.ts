@@ -1,5 +1,5 @@
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+  process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export class ApiError extends Error {
   status: number;
@@ -22,7 +22,7 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(API_URL + path, {
     ...options,
     headers,
     credentials: "include",
@@ -53,6 +53,6 @@ export function formatMoney(value: number, currency: string) {
       maximumFractionDigits: currency === "BTC" ? 8 : 2,
     }).format(value);
   } catch {
-    return `${currency} ${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    return currency + " " + value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
 }
