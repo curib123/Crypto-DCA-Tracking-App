@@ -1337,3 +1337,25 @@ tbody tr:last-child td {
     transition: none !important;
   }
 }
+
+
+.heading-statuses,
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .heading-statuses {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
