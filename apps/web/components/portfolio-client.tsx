@@ -50,10 +50,32 @@ type MarketSnapshot = {
   fetchedAt: string;
 };
 
+type MarketAssetDetail = {
+  symbol: string;
+  currency: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+  volume24h: number;
+  high24h: number;
+  low24h: number;
+  circulatingSupply: number;
+  totalSupply: number | null;
+  maxSupply: number | null;
+  marketCapRank: number | null;
+  lastUpdated: string | null;
+};
+
+function compactNumber(value: number) {
+  return new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 2 }).format(value);
+}
+
 export function PortfolioClient() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [market, setMarket] = useState<Record<string, PriceRow>>({});
   const [selected, setSelected] = useState<Asset | null>(null);
+  const [marketDetail, setMarketDetail] = useState<MarketAssetDetail | null>(null);
+  const [marketDetailLoading, setMarketDetailLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
 
@@ -79,6 +101,22 @@ export function PortfolioClient() {
     window.addEventListener("crypto-dca-data-updated", refresh);
     return () => window.removeEventListener("crypto-dca-data-updated", refresh);
   }, []);
+
+  async function openAsset(asset: Asset) {
+    setSelected(asset);
+    setMarketDetail(null);
+    setMarketDetailLoading(true);
+    try {
+      if (!summary) return;
+      setMarketDetail(await apiFetch<MarketAssetDetail>(
+        `/market/assets/${encodeURIComponent(asset.symbol)}?currency=${encodeURIComponent(summary.currency)}`,
+      ));
+    } catch {
+      setMarketDetail(null);
+    } finally {
+      setMarketDetailLoading(false);
+    }
+  }
 
   const assets = useMemo(() => {
     if (!summary) return [];
@@ -129,7 +167,7 @@ export function PortfolioClient() {
               const meta = getCryptoMeta(asset.symbol);
               const move = market[asset.symbol]?.change24h;
               return (
-                <button type="button" className="asset-card panel" key={asset.symbol} onClick={() => setSelected(asset)}>
+                <button type="button" className="asset-card panel" key={asset.symbol} onClick={() => void openAsset(asset)}>
                   <div className="asset-card-head">
                     <CoinAvatar symbol={asset.symbol} size={46} />
                     <div>
@@ -205,6 +243,24 @@ export function PortfolioClient() {
               <div><span>Unrealized P/L</span><strong className={selected.unrealizedPnl >= 0 ? "gain" : "loss"}>{selected.unrealizedPnl >= 0 ? "+" : ""}{formatMoney(selected.unrealizedPnl, summary.currency)}</strong></div>
               <div><span>Return</span><strong className={selected.returnPct >= 0 ? "gain" : "loss"}>{selected.returnPct >= 0 ? "+" : ""}{selected.returnPct.toFixed(2)}%</strong></div>
             </div>
+
+            {marketDetailLoading && <div className="skeleton-card compact-skeleton">Loading market details…</div>}
+            {marketDetail && (
+              <section>
+                <div className="asset-section-heading">
+                  <span className="eyebrow">Market</span>
+                  <h3>Current market context</h3>
+                </div>
+                <div className="market-detail-grid">
+                  <div><span>Market cap</span><strong>{formatMoney(marketDetail.marketCap, marketDetail.currency)}</strong></div>
+                  <div><span>24h volume</span><strong>{formatMoney(marketDetail.volume24h, marketDetail.currency)}</strong></div>
+                  <div><span>24h high</span><strong>{formatMoney(marketDetail.high24h, marketDetail.currency)}</strong></div>
+                  <div><span>24h low</span><strong>{formatMoney(marketDetail.low24h, marketDetail.currency)}</strong></div>
+                  <div><span>Circulating supply</span><strong>{compactNumber(marketDetail.circulatingSupply)} {marketDetail.symbol}</strong></div>
+                  <div><span>Max supply</span><strong>{marketDetail.maxSupply ? compactNumber(marketDetail.maxSupply) + " " + marketDetail.symbol : "No fixed max"}</strong></div>
+                </div>
+              </section>
+            )}
 
             <section className="asset-about">
               <span className="eyebrow">About {getCryptoMeta(selected.symbol).name}</span>
