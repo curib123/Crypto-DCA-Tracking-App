@@ -120,61 +120,26 @@ export function TransactionsClient() {
     }
   }, []);
 
-  const syncPending = useCallback(async () => {
-    if (!navigator.onLine) return;
-
-    const activeUser = await getActiveUser();
-    if (!activeUser) return;
-
-    const queued = await pendingTransactions(activeUser.id);
-
-    for (const row of queued) {
-      const id = String(row._offlineId);
-      const {
-        _offlineId,
-        _queuedAt,
-        _userId,
-        ...payload
-      } = row;
-
-      try {
-        await apiFetch("/transactions", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        await removePending(id);
-      } catch (error) {
-        setMessage(
-          error instanceof Error
-            ? `Pending sync stopped: ${error.message}`
-            : "Pending sync stopped because a transaction could not be saved.",
-        );
-        break;
-      }
-    }
-
-    await load();
-  }, [load]);
-
   useEffect(() => {
-    load().then(() => {
-      if (navigator.onLine) syncPending();
-    });
+    load();
 
     const onOnline = () => {
       setOffline(false);
-      syncPending();
+      load();
     };
     const onOffline = () => setOffline(true);
+    const onDataUpdated = () => load();
 
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
+    window.addEventListener("crypto-dca-data-updated", onDataUpdated);
 
     return () => {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
+      window.removeEventListener("crypto-dca-data-updated", onDataUpdated);
     };
-  }, [load, syncPending]);
+  }, [load]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
