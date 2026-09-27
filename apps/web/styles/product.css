@@ -1536,3 +1536,256 @@
   color: var(--muted);
   font-size: 10px;
 }
+
+
+/* DCA plan management */
+.dca-plan-summary {
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.dca-plan-summary article {
+  min-height: 94px;
+  padding: 17px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+}
+
+.dca-plan-summary span,
+.dca-plan-summary small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.dca-plan-summary strong {
+  font-size: 20px;
+  letter-spacing: -.04em;
+}
+
+.dca-plan-error {
+  margin-bottom: 12px;
+}
+
+.dca-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dca-plan-card {
+  padding: 18px;
+}
+
+.dca-plan-card.paused {
+  opacity: .68;
+}
+
+.dca-plan-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+}
+
+.dca-plan-head > div {
+  display: grid;
+  gap: 4px;
+}
+
+.dca-plan-head strong {
+  font-size: 12px;
+}
+
+.dca-plan-head span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.dca-plan-amount {
+  margin: 20px 0 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.dca-plan-amount span,
+.dca-plan-meta span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.dca-plan-amount strong {
+  font-size: 25px;
+  letter-spacing: -.04em;
+}
+
+.dca-plan-meta {
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dca-plan-meta > div {
+  display: grid;
+  gap: 5px;
+}
+
+.dca-plan-meta strong {
+  font-size: 10px;
+}
+
+.dca-plan-note {
+  margin: 13px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.dca-plan-actions {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.dca-plan-actions .text-button {
+  margin-left: auto;
+  font-size: 9px;
+}
+
+.dca-empty {
+  grid-column: 1 / -1;
+}
+
+.toggle-row {
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.toggle-row input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.toggle-row > span {
+  display: grid;
+  gap: 3px;
+}
+
+.toggle-row strong {
+  font-size: 10px;
+}
+
+.toggle-row small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+/* Legal and resilient system states */
+.legal-page,
+.system-state-page {
+  min-height: 100vh;
+  padding: 44px 18px;
+  background: var(--bg);
+}
+
+.legal-shell {
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+
+.legal-shell > .brand {
+  margin-bottom: 72px;
+}
+
+.legal-shell h1 {
+  margin: 8px 0 14px;
+  font-size: clamp(38px, 7vw, 66px);
+  letter-spacing: -.055em;
+  line-height: .98;
+}
+
+.legal-lead {
+  margin: 0 0 42px;
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.legal-shell section {
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+}
+
+.legal-shell section h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.legal-shell section p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.legal-actions {
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.system-state-page {
+  display: grid;
+  place-items: center;
+}
+
+.system-state-card {
+  width: min(520px, 100%);
+  padding: 28px;
+  text-align: center;
+}
+
+.system-state-card .nextfi-logo {
+  margin: 0 auto 28px;
+}
+
+.system-state-card h1 {
+  margin: 8px 0 10px;
+  font-size: 30px;
+  letter-spacing: -.045em;
+}
+
+.system-state-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.system-state-card code {
+  display: block;
+  margin: 14px 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.system-state-card > div {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
