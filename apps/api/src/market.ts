@@ -27,8 +27,9 @@ export class MarketService {
 
     if (!cleanSymbols.length) return {};
 
-    const vs = currency.toLowerCase();
-    const cacheKey = `${cleanSymbols.sort().join(",")}:${vs}`;
+    const requestedCurrency = currency.toLowerCase();
+    const vs = ["usdt", "usdc"].includes(requestedCurrency) ? "usd" : requestedCurrency;
+    const cacheKey = `${cleanSymbols.sort().join(",")}:${requestedCurrency}`;
     const cached = this.cache.get(cacheKey);
 
     if (cached && cached.expiresAt > Date.now()) {
