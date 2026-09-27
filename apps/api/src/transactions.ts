@@ -15,6 +15,7 @@ import { calculateAssetPosition } from "@crypto-dca/core";
 import {
   IsDateString,
   IsEnum,
+  IsIn,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -47,6 +48,7 @@ export class CreateTransactionDto {
 
   @IsString()
   @MaxLength(12)
+  @IsIn(["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "SGD", "JPY", "KRW", "MYR", "IDR", "THB", "USDT", "USDC"])
   quoteCurrency!: string;
 
   @IsOptional()
@@ -91,10 +93,46 @@ export class TransactionsService {
 
   async create(userId: string, dto: CreateTransactionDto) {
     const assetSymbol = dto.assetSymbol.trim().toUpperCase();
+    const occurredAt = new Date(dto.occurredAt);
+
+    if (occurredAt.getTime() > Date.now() + 5 * 60 * 1000) {
+      throw new BadRequestException(
+        "Ledger transactions cannot be future-dated. Use a DCA plan/reminder for future purchases.",
+      );
+    }
+
+    const quantityRequired = [
+      TransactionType.BUY,
+      TransactionType.SELL,
+      TransactionType.TRANSFER_IN,
+      TransactionType.TRANSFER_OUT,
+      TransactionType.AIRDROP,
+      TransactionType.REWARD,
+      TransactionType.STAKING_REWARD,
+    ].includes(dto.type);
+
+    if (quantityRequired && dto.quantity <= 0) {
+      throw new BadRequestException("Quantity must be greater than zero for this transaction type.");
+    }
+
+    if (
+      (dto.type === TransactionType.BUY || dto.type === TransactionType.SELL) &&
+      dto.amountSpent <= 0
+    ) {
+      throw new BadRequestException("Buy and sell transactions require an amount greater than zero.");
+    }
+
+    if (dto.type === TransactionType.FEE && dto.quantity <= 0 && (dto.feeBase || 0) <= 0) {
+      throw new BadRequestException("A fee transaction requires either asset quantity or a base-currency fee.");
+    }
 
     if (dto.type === TransactionType.SELL) {
       const existing = await this.prisma.transaction.findMany({
-        where: { userId, assetSymbol },
+        where: {
+          userId,
+          assetSymbol,
+          occurredAt: { lte: occurredAt },
+        },
         orderBy: { occurredAt: "asc" },
       });
 
@@ -122,7 +160,13 @@ export class TransactionsService {
         assetSymbol,
         type: dto.type,
         quantity: String(dto.quantity),
-        unitPrice: String(dto.unitPrice),
+        unitPrice: String(
+          dto.unitPrice > 0
+            ? dto.unitPrice
+            : dto.quantity > 0
+              ? dto.amountSpent / dto.quantity
+              : 0,
+        ),
         amountSpent: String(dto.amountSpent),
         quoteCurrency: dto.quoteCurrency.trim().toUpperCase(),
         fxRateToBase: String(dto.fxRateToBase || 1),
@@ -130,7 +174,7 @@ export class TransactionsService {
         exchange: dto.exchange?.trim() || null,
         wallet: dto.wallet?.trim() || null,
         notes: dto.notes?.trim() || null,
-        occurredAt: new Date(dto.occurredAt),
+        occurredAt,
       },
     });
   }
