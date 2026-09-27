@@ -61,6 +61,9 @@ jobs:
       - name: Test calculation engine
         run: pnpm --filter @crypto-dca/core test
 
+      - name: Test offline cache and service worker
+        run: pnpm --filter @crypto-dca/web test
+
       - name: Typecheck
         run: pnpm typecheck
 
