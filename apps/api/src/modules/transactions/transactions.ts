@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { TransactionType } from "@prisma/client";
 import { validateAssetLedger } from "@crypto-dca/core";
+import { SUPPORTED_CURRENCIES } from "../../common/currency.constants";
 import {
   IsDateString,
   IsEnum,
@@ -49,7 +50,7 @@ export class CreateTransactionDto {
 
   @IsString()
   @MaxLength(12)
-  @IsIn(["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "SGD", "JPY", "KRW", "MYR", "IDR", "THB", "USDT", "USDC"])
+  @IsIn(SUPPORTED_CURRENCIES)
   quoteCurrency!: string;
 
   @IsOptional()
