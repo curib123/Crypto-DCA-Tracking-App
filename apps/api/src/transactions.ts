@@ -135,6 +135,7 @@ export class TransactionsService {
       TransactionType.AIRDROP,
       TransactionType.REWARD,
       TransactionType.STAKING_REWARD,
+      TransactionType.ADJUSTMENT,
     ].includes(dto.type);
 
     if (quantityRequired && dto.quantity <= 0) {
