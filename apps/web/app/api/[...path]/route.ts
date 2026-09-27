@@ -24,6 +24,7 @@ import {
   createTransaction,
   createDcaPlan,
   getLandingContent,
+  getMarketAssetDetail,
   getMarketPrices,
   getSettings,
   listDcaPlans,
@@ -141,6 +142,15 @@ async function handle(request: NextRequest, context: RouteContext) {
     if (path === "portfolio/summary" && method === "GET") {
       const user = await requireUser(request);
       return json(await portfolioSummary(user.id));
+    }
+
+    if (path.startsWith("market/assets/") && method === "GET") {
+      const user = await requireUser(request);
+      assertRateLimit("market-detail:" + user.id, 30, 60 * 1000);
+      const symbol = path.slice("market/assets/".length);
+      if (!symbol) throw new HttpError(400, "Asset symbol is required.");
+      const currency = url.searchParams.get("currency") || "USD";
+      return json(await getMarketAssetDetail(symbol, currency));
     }
 
     if (path === "market/prices" && method === "GET") {
