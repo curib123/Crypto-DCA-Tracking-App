@@ -257,7 +257,7 @@ Before a public commercial launch, add refresh-token rotation, email verificatio
 
 ## Market data
 
-The API uses CoinGecko's free **Demo/public** simple-price endpoint. No paid market-data plan is required. If `COINGECKO_DEMO_API_KEY` is configured, the API sends it only from the backend; otherwise it attempts public/keyless access. A 60-second in-memory cache reduces calls, and portfolio calculations fall back to the last recorded entry price if market data is unavailable. Supported assets:
+The API uses CoinGecko's free **Demo/public** simple-price endpoint. No paid market-data plan is required. If `COINGECKO_DEMO_API_KEY` is configured, the API sends it only from the backend; otherwise it attempts public/keyless access. A 15-minute shared in-memory snapshot reduces calls, and portfolio calculations fall back to the last recorded entry price if market data is unavailable. Supported assets:
 
 - BTC
 - ETH
