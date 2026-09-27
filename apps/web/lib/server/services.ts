@@ -1322,3 +1322,78 @@ export async function removeDcaPlan(userId: string, id: string) {
   await prisma.dcaPlan.delete({ where: { id } });
   return { deleted: true };
 }
+
+
+type MarketAssetDetail = {
+  symbol: string;
+  currency: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+  volume24h: number;
+  high24h: number;
+  low24h: number;
+  circulatingSupply: number;
+  totalSupply: number | null;
+  maxSupply: number | null;
+  marketCapRank: number | null;
+  lastUpdated: string | null;
+};
+
+const marketAssetDetailCache = new Map<string, { expiresAt: number; value: MarketAssetDetail }>();
+
+export async function getMarketAssetDetail(symbolRaw: string, currencyRaw: string) {
+  const symbol = supportedAsset(symbolRaw);
+  const displayCurrency = currency(currencyRaw, "Market currency");
+  const providerCode = providerCurrency(displayCurrency).toLowerCase();
+  const cacheKey = symbol + ":" + displayCurrency;
+  const cached = marketAssetDetailCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  const endpoint = new URL("https://api.coingecko.com/api/v3/coins/markets");
+  endpoint.searchParams.set("vs_currency", providerCode);
+  endpoint.searchParams.set("ids", SUPPORTED_ASSETS[symbol]);
+  endpoint.searchParams.set("price_change_percentage", "24h");
+  endpoint.searchParams.set("sparkline", "false");
+
+  const demoKey = String(process.env.COINGECKO_DEMO_API_KEY || "").trim();
+  const response = await fetch(endpoint, {
+    signal: AbortSignal.timeout(7000),
+    headers: {
+      accept: "application/json",
+      "user-agent": "NextFi/1.0",
+      ...(demoKey ? { "x-cg-demo-api-key": demoKey } : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) throw new HttpError(503, "Market detail provider unavailable.");
+
+  const rows = (await response.json()) as Array<Record<string, unknown>>;
+  const row = rows[0];
+  if (!row) throw new HttpError(404, "Market detail not found.");
+
+  const value: MarketAssetDetail = {
+    symbol,
+    currency: displayCurrency,
+    price: Number(row.current_price || 0),
+    change24h: Number(row.price_change_percentage_24h || 0),
+    marketCap: Number(row.market_cap || 0),
+    volume24h: Number(row.total_volume || 0),
+    high24h: Number(row.high_24h || 0),
+    low24h: Number(row.low_24h || 0),
+    circulatingSupply: Number(row.circulating_supply || 0),
+    totalSupply: row.total_supply === null || row.total_supply === undefined ? null : Number(row.total_supply),
+    maxSupply: row.max_supply === null || row.max_supply === undefined ? null : Number(row.max_supply),
+    marketCapRank: row.market_cap_rank === null || row.market_cap_rank === undefined ? null : Number(row.market_cap_rank),
+    lastUpdated: typeof row.last_updated === "string" ? row.last_updated : null,
+  };
+
+  marketAssetDetailCache.set(cacheKey, {
+    expiresAt: Date.now() + 15 * 60 * 1000,
+    value,
+  });
+
+  return value;
+}
