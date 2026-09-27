@@ -97,13 +97,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       try {
         const pendingLogout = await isLogoutPending();
 
-        if (pendingLogout && navigator.onLine) {
-          try {
-            await apiFetch("/auth/logout", { method: "POST" }, false);
-          } finally {
-            await clearLogoutPending();
-            await clearActiveUser();
+        if (pendingLogout) {
+          if (navigator.onLine) {
+            try {
+              await apiFetch("/auth/logout", { method: "POST" }, false);
+              await clearLogoutPending();
+            } catch {
+              // Keep the marker so the server session is invalidated on a later retry.
+            }
           }
+
+          await clearActiveUser();
           if (mounted) router.replace("/login");
           return;
         }
