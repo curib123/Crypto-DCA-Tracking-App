@@ -1,10 +1,7 @@
 import {
   BadRequestException,
   Body,
-  CanActivate,
   Controller,
-  ExecutionContext,
-  ForbiddenException,
   Get,
   Injectable,
   Param,
@@ -14,31 +11,19 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { UserRole, UserStatus } from "@prisma/client";
+import {
+  AdOverride,
+  UserRole,
+  UserStatus,
+} from "@prisma/client";
 import { IsEnum, IsOptional } from "class-validator";
 import { PrismaService } from "../../infrastructure/database/prisma.service";
-import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import {
+  AdSenseService,
+  UpdateAdSenseSettingsDto,
+} from "../ads/ads";
 import { ContentService } from "../content/content";
-
-@Injectable()
-export class AdminGuard implements CanActivate {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async canActivate(context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest();
-    if (!request.user?.id) throw new ForbiddenException("Administrator access required.");
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: request.user.id },
-      select: { role: true, status: true },
-    });
-
-    if (!user || user.status !== UserStatus.ACTIVE || user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException("Administrator access required.");
-    }
-    return true;
-  }
-}
+import { ControlPanelReadyGuard } from "./control-panel-auth";
 
 export class UpdateAdminUserDto {
   @IsOptional()
@@ -48,6 +33,10 @@ export class UpdateAdminUserDto {
   @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus;
+
+  @IsOptional()
+  @IsEnum(AdOverride)
+  adsOverride?: AdOverride;
 }
 
 @Injectable()
@@ -55,18 +44,19 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly content: ContentService,
+    private readonly ads: AdSenseService,
   ) {}
 
   private async audit(
-    actorUserId: string,
+    actorAdminId: string,
     action: string,
     targetType: string,
     targetId?: string,
     metadata?: Record<string, unknown>,
   ) {
-    await this.prisma.adminAuditLog.create({
+    await this.prisma.controlPanelAuditLog.create({
       data: {
-        actorUserId,
+        actorAdminId,
         action,
         targetType,
         targetId,
@@ -107,6 +97,7 @@ export class AdminService {
       const key = user.createdAt.toISOString().slice(0, 10);
       if (key in signups) signups[key] += 1;
     }
+
     for (const tx of transactions) {
       const key = tx.createdAt.toISOString().slice(0, 10);
       if (key in txByDay) txByDay[key] += 1;
@@ -116,13 +107,20 @@ export class AdminService {
     return {
       totals: {
         users: users.length,
-        activeUsers7d: users.filter((user) => user.lastLoginAt && user.lastLoginAt >= since7).length,
-        admins: users.filter((user) => user.role === UserRole.ADMIN).length,
-        suspendedUsers: users.filter((user) => user.status === UserStatus.SUSPENDED).length,
+        activeUsers7d: users.filter(
+          (user) => user.lastLoginAt && user.lastLoginAt >= since7,
+        ).length,
+        appAdmins: users.filter((user) => user.role === UserRole.ADMIN).length,
+        suspendedUsers: users.filter(
+          (user) => user.status === UserStatus.SUSPENDED,
+        ).length,
         transactions30d: transactions.length,
       },
       userGrowth: dayKeys.map((date) => ({ date, value: signups[date] })),
-      transactionActivity: dayKeys.map((date) => ({ date, value: txByDay[date] })),
+      transactionActivity: dayKeys.map((date) => ({
+        date,
+        value: txByDay[date],
+      })),
       topAssets: Object.entries(assetCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8)
@@ -158,6 +156,7 @@ export class AdminService {
           role: true,
           status: true,
           themePreference: true,
+          adsOverride: true,
           lastLoginAt: true,
           createdAt: true,
         },
@@ -165,18 +164,22 @@ export class AdminService {
       this.prisma.user.count({ where }),
     ]);
 
-    return { items, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) };
+    return {
+      items,
+      total,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil(total / limit)),
+    };
   }
 
-  async updateUser(actorUserId: string, userId: string, dto: UpdateAdminUserDto) {
-    if (!dto.role && !dto.status) {
+  async updateUser(
+    actorAdminId: string,
+    userId: string,
+    dto: UpdateAdminUserDto,
+  ) {
+    if (!dto.role && !dto.status && !dto.adsOverride) {
       throw new BadRequestException("No user changes were provided.");
-    }
-    if (actorUserId === userId && dto.status === UserStatus.SUSPENDED) {
-      throw new BadRequestException("You cannot suspend your own administrator account.");
-    }
-    if (actorUserId === userId && dto.role === UserRole.USER) {
-      throw new BadRequestException("You cannot remove your own administrator role.");
     }
 
     const updated = await this.prisma.user.update({
@@ -184,6 +187,7 @@ export class AdminService {
       data: {
         ...(dto.role ? { role: dto.role } : {}),
         ...(dto.status ? { status: dto.status } : {}),
+        ...(dto.adsOverride ? { adsOverride: dto.adsOverride } : {}),
       },
       select: {
         id: true,
@@ -191,24 +195,31 @@ export class AdminService {
         name: true,
         role: true,
         status: true,
+        adsOverride: true,
         lastLoginAt: true,
         createdAt: true,
       },
     });
 
-    await this.audit(actorUserId, "user.update", "User", userId, {
+    await this.audit(actorAdminId, "user.update", "User", userId, {
       role: dto.role,
       status: dto.status,
+      adsOverride: dto.adsOverride,
     });
+
     return updated;
   }
 
   async auditLog() {
-    return this.prisma.adminAuditLog.findMany({
+    return this.prisma.controlPanelAuditLog.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {
-        actor: { select: { email: true, name: true } },
+        actor: {
+          select: {
+            username: true,
+          },
+        },
       },
     });
   }
@@ -217,15 +228,42 @@ export class AdminService {
     return this.content.getLanding();
   }
 
-  async saveLanding(actorUserId: string, value: unknown) {
+  async saveLanding(
+    actorAdminId: string,
+    value: unknown,
+  ) {
     const saved = await this.content.saveLanding(value);
-    await this.audit(actorUserId, "landing.update", "SiteSetting", "landing");
+    await this.audit(
+      actorAdminId,
+      "landing.update",
+      "SiteSetting",
+      "landing",
+    );
     return saved;
+  }
+
+  getAds() {
+    return this.ads.adminView();
+  }
+
+  async saveAds(
+    actorAdminId: string,
+    dto: UpdateAdSenseSettingsDto,
+  ) {
+    const saved = await this.ads.updateSettings(dto);
+    await this.audit(
+      actorAdminId,
+      "adsense.settings.update",
+      "SiteSetting",
+      "adsense",
+      saved,
+    );
+    return this.ads.adminView();
   }
 }
 
 @Controller("admin")
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(ControlPanelReadyGuard)
 export class AdminController {
   constructor(private readonly admin: AdminService) {}
 
@@ -249,7 +287,11 @@ export class AdminController {
     @Param("id") id: string,
     @Body() dto: UpdateAdminUserDto,
   ) {
-    return this.admin.updateUser(req.user.id, id, dto);
+    return this.admin.updateUser(
+      req.controlAdmin.id,
+      id,
+      dto,
+    );
   }
 
   @Get("audit")
@@ -263,7 +305,29 @@ export class AdminController {
   }
 
   @Put("content/landing")
-  saveLanding(@Req() req: any, @Body() body: unknown) {
-    return this.admin.saveLanding(req.user.id, body);
+  saveLanding(
+    @Req() req: any,
+    @Body() body: unknown,
+  ) {
+    return this.admin.saveLanding(
+      req.controlAdmin.id,
+      body,
+    );
+  }
+
+  @Get("ads")
+  ads() {
+    return this.admin.getAds();
+  }
+
+  @Put("ads")
+  saveAds(
+    @Req() req: any,
+    @Body() dto: UpdateAdSenseSettingsDto,
+  ) {
+    return this.admin.saveAds(
+      req.controlAdmin.id,
+      dto,
+    );
   }
 }
