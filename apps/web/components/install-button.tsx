@@ -7,7 +7,13 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-export function InstallButton({ className = "button button-dark" }: { className?: string }) {
+export function InstallButton({
+  className = "button button-dark",
+  label = "Install NextFi",
+}: {
+  className?: string;
+  label?: string;
+}) {
   const [promptEvent, setPromptEvent] = useState<InstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
 
@@ -54,7 +60,7 @@ export function InstallButton({ className = "button button-dark" }: { className?
 
   return (
     <button type="button" className={className} onClick={install}>
-      {installed ? "Installed" : "Install PWA"}
+      {installed ? "Installed" : label}
     </button>
   );
 }
