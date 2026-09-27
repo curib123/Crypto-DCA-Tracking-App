@@ -106,11 +106,14 @@ export class ControlPanelAuthService implements OnModuleInit {
     this.bootstrapPassword = String(
       config.get("CONTROL_PANEL_PASSWORD") || "pass",
     );
-    this.jwtSecret = String(
-      config.get("CONTROL_PANEL_JWT_SECRET") ||
-        config.get("JWT_SECRET") ||
-        "dev-only-control-panel-secret",
+    const configuredControlSecret = String(
+      config.get("CONTROL_PANEL_JWT_SECRET") || "",
     );
+    const userJwtSecret = String(config.get("JWT_SECRET") || "");
+    this.jwtSecret =
+      configuredControlSecret ||
+      userJwtSecret ||
+      "dev-only-control-panel-secret";
 
     if (this.production) {
       if (
@@ -123,9 +126,13 @@ export class ControlPanelAuthService implements OnModuleInit {
         );
       }
 
-      if (this.jwtSecret.length < 32) {
+      if (
+        !configuredControlSecret ||
+        configuredControlSecret.length < 32 ||
+        configuredControlSecret === userJwtSecret
+      ) {
         throw new Error(
-          "CONTROL_PANEL_JWT_SECRET must be at least 32 characters in production.",
+          "Production requires a separate CONTROL_PANEL_JWT_SECRET of at least 32 characters.",
         );
       }
     }
