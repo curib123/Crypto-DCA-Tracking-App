@@ -6,6 +6,9 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Caddy is the single trusted reverse proxy in production.
+  app.getHttpAdapter().getInstance().set("trust proxy", 1);
+
   app.setGlobalPrefix("api");
   app.enableCors({
     origin: (process.env.CORS_ORIGIN || "http://localhost:3000")
