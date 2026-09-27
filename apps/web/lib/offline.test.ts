@@ -4,9 +4,12 @@ import test from "node:test";
 import {
   cacheUserResource,
   clearActiveUser,
+  clearLogoutPending,
   clearUserOfflineData,
   getActiveUser,
   getCachedUserResource,
+  isLogoutPending,
+  markLogoutPending,
   pendingTransactions,
   queueTransaction,
   removePending,
@@ -64,4 +67,16 @@ test("offline cache stays isolated per user and sign-out cleanup is scoped", asy
 
   assert.equal((await getCachedUserResource<{ total: number }>(userB.id, "portfolio"))?.value.total, 200);
   assert.equal((await pendingTransactions(userB.id)).length, 1);
+});
+
+
+test("offline logout marker survives until explicit server logout cleanup", async () => {
+  await clearLogoutPending();
+  assert.equal(await isLogoutPending(), false);
+
+  await markLogoutPending();
+  assert.equal(await isLogoutPending(), true);
+
+  await clearLogoutPending();
+  assert.equal(await isLogoutPending(), false);
 });
