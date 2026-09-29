@@ -1885,3 +1885,192 @@
 .feedback-card > div {
   max-width: 620px;
 }
+/* ===== NextFi Software AI product theme ===== */
+.app-frame {
+  background:
+    radial-gradient(circle at 12% 0, var(--brand-glow), transparent 26rem),
+    radial-gradient(circle at 90% 6%, var(--brand-azure-glow), transparent 30rem),
+    var(--bg);
+}
+
+.app-sidebar {
+  border-right-color: color-mix(in srgb, var(--line) 88%, var(--brand-azure) 12%);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  box-shadow: 8px 0 28px rgba(15, 23, 42, .025);
+}
+
+.app-nav a {
+  min-height: 46px;
+  color: var(--muted);
+}
+
+.app-nav a:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--brand-azure) 6%, var(--surface-2));
+}
+
+.app-nav a.active,
+.app-nav a[aria-current="page"] {
+  color: var(--brand-azure-deep);
+  background: color-mix(in srgb, var(--brand-azure) 10%, var(--surface));
+  box-shadow: inset 3px 0 0 var(--brand-azure);
+}
+
+.app-nav a.active .nav-icon,
+.app-nav a[aria-current="page"] .nav-icon {
+  color: var(--brand-teal-deep);
+}
+
+.app-topbar {
+  border-bottom-color: color-mix(in srgb, var(--line) 88%, var(--brand-azure) 12%);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.account-avatar,
+.account-button {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--brand-azure-deep), var(--brand-teal-deep));
+  box-shadow: 0 7px 20px color-mix(in srgb, var(--brand-azure) 18%, transparent);
+}
+
+.app-drawer {
+  border-left-color: color-mix(in srgb, var(--line) 88%, var(--brand-azure) 12%);
+}
+
+.drawer-nav a.active {
+  color: var(--brand-azure-deep);
+  background: color-mix(in srgb, var(--brand-azure) 9%, var(--surface));
+}
+
+.drawer-section {
+  background: color-mix(in srgb, var(--brand-teal) 3%, transparent);
+}
+
+.portfolio-hero {
+  border: 1px solid rgba(96, 165, 250, .18);
+  background:
+    radial-gradient(circle at 84% 18%, rgba(45, 212, 191, .24), transparent 28%),
+    radial-gradient(circle at 18% 110%, rgba(59, 130, 246, .28), transparent 42%),
+    linear-gradient(145deg, #0f172a 0%, #10233c 56%, #0a182a 100%);
+  box-shadow: 0 26px 72px rgba(15, 23, 42, .18);
+}
+
+.portfolio-hero .gain {
+  color: #5eead4;
+}
+
+.portfolio-hero .loss {
+  color: #fda4af;
+}
+
+.hero-currency-chip,
+.balance-toggle {
+  border-color: rgba(148, 163, 184, .24);
+  background: rgba(255, 255, 255, .055);
+  backdrop-filter: blur(12px);
+}
+
+.balance-toggle:hover {
+  border-color: rgba(96, 165, 250, .46);
+  background: rgba(59, 130, 246, .13);
+  color: #ffffff;
+}
+
+.quick-actions > a,
+.quick-actions > button {
+  border-color: color-mix(in srgb, var(--line) 90%, var(--brand-azure) 10%);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .035);
+}
+
+.quick-actions > a:hover,
+.quick-actions > button:hover {
+  border-color: color-mix(in srgb, var(--brand-azure) 38%, var(--line));
+  background: color-mix(in srgb, var(--brand-azure) 4%, var(--surface));
+  transform: translateY(-1px);
+}
+
+.quick-actions > * > span {
+  color: var(--brand-azure-deep);
+  background: color-mix(in srgb, var(--brand-azure) 9%, var(--surface));
+}
+
+.quick-actions > :first-child > span {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--brand-azure-deep), var(--brand-teal-deep));
+}
+
+.home-asset-row:hover {
+  background: color-mix(in srgb, var(--brand-azure) 3%, var(--surface));
+}
+
+.home-asset-row:hover .home-asset-name strong {
+  color: var(--brand-azure-deep);
+}
+
+.metric-card,
+.market-card,
+.settings-card,
+.insight-card,
+.asset-card,
+.dca-plan-card {
+  border-color: color-mix(in srgb, var(--line) 92%, var(--brand-azure) 8%);
+}
+
+.market-card:hover,
+.asset-card:hover,
+.dca-plan-card:hover {
+  border-color: color-mix(in srgb, var(--brand-azure) 32%, var(--line));
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .055);
+}
+
+.segment-control button.active {
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--brand-azure-deep), var(--brand-teal-deep));
+}
+
+.confirm-icon {
+  color: var(--brand-teal-deep);
+  background: color-mix(in srgb, var(--brand-teal) 10%, var(--surface));
+}
+
+.modal-close:hover {
+  color: var(--brand-azure-deep);
+  background: color-mix(in srgb, var(--brand-azure) 8%, var(--surface));
+}
+
+.theme-control button.active {
+  color: var(--brand-azure-deep);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-azure) 11%, transparent);
+}
+
+.mobile-add-action > span {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--brand-azure-deep), var(--brand-teal-deep));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--brand-azure) 26%, transparent);
+}
+
+.mobile-nav a.active {
+  color: var(--brand-azure-deep);
+}
+
+.mobile-nav a.active svg {
+  color: var(--brand-azure-deep);
+}
+
+html[data-theme="dark"] .app-sidebar,
+html[data-theme="dark"] .app-topbar,
+html[data-theme="dark"] .mobile-nav {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+html[data-theme="dark"] .quick-actions > * > span {
+  background: color-mix(in srgb, var(--brand-azure) 13%, var(--surface));
+}
+
+html[data-theme="dark"] .quick-actions > :first-child > span,
+html[data-theme="dark"] .mobile-add-action > span {
+  background: linear-gradient(145deg, #2563eb, #0f9f91);
+}
+
