@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallButton } from "@/components/install-button";
 import { NextFiLogo } from "@/components/nextfi-logo";
-import { ThemeControl } from "@/components/theme-control";
 import { AdSenseSlot } from "@/components/adsense-slot";
 import { getLandingContent } from "@/lib/landing";
 
@@ -70,7 +69,6 @@ export default async function LandingPage() {
           </nav>
 
           <div className="header-actions">
-            <ThemeControl compact />
             <Link href="/login" className="button button-ghost">Sign in</Link>
             <Link href="/login" className="button button-dark">Start free</Link>
           </div>
