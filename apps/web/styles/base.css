@@ -558,3 +558,79 @@ table select {
   font-size: 11px;
   font-weight: 800;
 }
+/* ===== NextFi Software AI shared theme ===== */
+body {
+  background:
+    radial-gradient(circle at 12% -8%, var(--brand-glow), transparent 28rem),
+    radial-gradient(circle at 92% 4%, var(--brand-azure-glow), transparent 30rem),
+    var(--bg);
+}
+
+::selection {
+  background: var(--brand-teal);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline-color: var(--brand-azure);
+}
+
+.button,
+input,
+select,
+textarea,
+.panel,
+.skeleton-card,
+.status-pill {
+  transition:
+    border-color .16s ease,
+    background-color .16s ease,
+    color .16s ease,
+    box-shadow .16s ease,
+    transform .16s ease;
+}
+
+.button-dark {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.button-dark:hover:not(:disabled) {
+  border-color: var(--brand-azure-deep);
+  background: var(--brand-azure-deep);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--brand-azure) 24%, transparent);
+  opacity: 1;
+}
+
+.button-light:hover:not(:disabled),
+.button-ghost:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--brand-azure) 28%, var(--line));
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand-azure);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-azure) 12%, transparent);
+}
+
+.panel,
+.skeleton-card {
+  border-color: color-mix(in srgb, var(--line) 92%, var(--brand-azure) 8%);
+}
+
+.status-pill {
+  border-color: color-mix(in srgb, var(--brand-teal) 22%, var(--line));
+  background: color-mix(in srgb, var(--brand-teal) 5%, var(--surface));
+}
+
+.gain {
+  color: var(--positive);
+}
+
+.loss {
+  color: var(--negative);
+}
+
