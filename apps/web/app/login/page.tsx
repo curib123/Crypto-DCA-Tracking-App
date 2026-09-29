@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GoogleSignIn } from "@/components/google-sign-in";
 import { NextFiLogo } from "@/components/nextfi-logo";
-import { ThemeControl } from "@/components/theme-control";
 
 export const metadata: Metadata = {
   title: "Sign in with Google",
@@ -19,7 +18,6 @@ export default function LoginPage() {
               <NextFiLogo />
               <span>NextFi</span>
             </Link>
-            <ThemeControl compact />
           </div>
           <p className="eyebrow">Secure account access</p>
           <h1>Continue with Google.</h1>
