@@ -109,12 +109,17 @@ export function GoogleSignIn() {
 
     buttonRef.current.innerHTML = "";
 
+    const width = Math.max(
+      240,
+      Math.min(420, Math.floor(buttonRef.current.getBoundingClientRect().width || 360)),
+    );
+
     window.google.accounts.id.renderButton(buttonRef.current, {
       theme: "outline",
       size: "large",
       shape: "pill",
       text: "continue_with",
-      width: 360,
+      width,
     });
   }, [clientId, handleCredential]);
 
