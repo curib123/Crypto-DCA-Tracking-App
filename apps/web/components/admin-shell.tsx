@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
-import { ThemeControl } from "@/components/theme-control";
 import { NavIcon } from "@/components/ui/nav-icon";
 import { CONTROL_NAVIGATION } from "@/config/navigation";
 
@@ -105,7 +104,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <span className="eyebrow">Secure control panel</span>
             <strong>Server-authorized administration.</strong>
           </div>
-          <ThemeControl compact />
         </header>
         {children}
       </div>
