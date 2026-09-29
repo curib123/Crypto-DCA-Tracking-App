@@ -921,3 +921,101 @@
   }
 }
 
+/* ===== Full-page mobile authentication ===== */
+@media (max-width: 820px) {
+  .auth-shell {
+    display: block;
+    min-height: 100dvh;
+  }
+
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-panel {
+    min-height: 100dvh;
+    padding:
+      max(22px, env(safe-area-inset-top))
+      20px
+      max(18px, env(safe-area-inset-bottom));
+  }
+
+  .auth-mobile-brand {
+    display: block;
+  }
+
+  .auth-mobile-brand .brand {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .auth-mobile-brand .nextfi-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .auth-panel-inner {
+    width: 100%;
+    margin: auto 0;
+    padding: 46px 0 28px;
+  }
+
+  .auth-back-link {
+    display: none;
+  }
+
+  .auth-heading-modern h1 {
+    max-width: 330px;
+    margin-top: 12px;
+    font-size: clamp(38px, 11vw, 52px);
+  }
+
+  .auth-heading-modern > p:not(.eyebrow) {
+    max-width: 340px;
+    font-size: 14px;
+  }
+
+  .auth-panel .google-auth {
+    margin-top: 32px;
+  }
+
+  .auth-panel .google-button,
+  .auth-panel .native-google-button {
+    min-height: 54px;
+  }
+
+  .auth-security-note {
+    margin-top: 20px;
+  }
+
+  .auth-footer {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-panel {
+    padding-inline: 18px;
+  }
+
+  .auth-panel-inner {
+    padding-top: 38px;
+  }
+
+  .auth-heading-modern h1 {
+    font-size: clamp(36px, 12vw, 48px);
+  }
+
+  .auth-security-note {
+    border-radius: 14px;
+  }
+
+  .auth-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
