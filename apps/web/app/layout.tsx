@@ -9,18 +9,20 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 const themeBootstrap = `
 (() => {
-  try {
-    const saved = (localStorage.getItem("nextfi-theme") || "SYSTEM").toUpperCase();
-    const preference = ["SYSTEM", "LIGHT", "DARK"].includes(saved) ? saved : "SYSTEM";
-    const dark = preference === "DARK" || (preference === "SYSTEM" && matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.dataset.themePreference = preference.toLowerCase();
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-    document.documentElement.style.colorScheme = dark ? "dark" : "light";
-  } catch {
-    const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const media = matchMedia("(prefers-color-scheme: dark)");
+  const applySystemTheme = () => {
+    const theme = media.matches ? "dark" : "light";
     document.documentElement.dataset.themePreference = "system";
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-  }
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  };
+
+  try {
+    localStorage.removeItem("nextfi-theme");
+  } catch {}
+
+  applySystemTheme();
+  media.addEventListener?.("change", applySystemTheme);
 })();
 `;
 
