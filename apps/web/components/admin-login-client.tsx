@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
-import { ThemeControl } from "@/components/theme-control";
 
 type LoginResponse = {
   admin: {
@@ -55,7 +54,6 @@ export function AdminLoginClient() {
               <NextFiLogo />
               <span>NextFi Control</span>
             </Link>
-            <ThemeControl compact />
           </div>
           <p className="eyebrow">Restricted administration</p>
           <h1>Control panel login</h1>
