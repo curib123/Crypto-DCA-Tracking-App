@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "@/lib/api";
-import { ThemeControl } from "@/components/theme-control";
 import { AlertModal, AppModal } from "@/components/ui/app-modal";
 
 const currencies = ["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "SGD", "JPY", "KRW", "MYR", "IDR", "THB", "USDT", "USDC"];
@@ -10,7 +9,6 @@ const currencies = ["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "SGD", "JPY", "KRW
 type Settings = {
   email: string;
   baseCurrency: string;
-  themePreference: "SYSTEM" | "LIGHT" | "DARK";
 };
 
 export function SettingsClient() {
@@ -61,7 +59,7 @@ export function SettingsClient() {
         <div>
           <span className="eyebrow">Profile & settings</span>
           <h1>Your NextFi account.</h1>
-          <p>Manage your identity, reporting currency, appearance and app preferences without clutter.</p>
+          <p>Manage your identity, reporting currency and app preferences without clutter.</p>
         </div>
       </div>
 
@@ -78,12 +76,6 @@ export function SettingsClient() {
       </section>
 
       <section className="settings-list panel">
-        <div className="settings-list-item">
-          <div className="settings-icon">◐</div>
-          <div><strong>Appearance</strong><span>Choose System, Light or Dark.</span></div>
-          <ThemeControl syncAccount />
-        </div>
-
         <button type="button" className="settings-list-item settings-button" onClick={() => {
           setDraftCurrency(settings?.baseCurrency || "USD");
           setCurrencyOpen(true);
