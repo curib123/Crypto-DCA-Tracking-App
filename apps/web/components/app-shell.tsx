@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { ApiError, apiFetch, isNetworkFailure } from "@/lib/api";
 import { NextFiLogo } from "@/components/nextfi-logo";
-import { applyTheme, ThemeControl } from "@/components/theme-control";
 import { AdSenseSlot } from "@/components/adsense-slot";
 import { NavIcon } from "@/components/ui/nav-icon";
 import { AlertModal, ConfirmModal } from "@/components/ui/app-modal";
@@ -29,7 +28,6 @@ type SessionUser = {
   email: string;
   baseCurrency: string;
   role: "USER" | "ADMIN";
-  themePreference: "SYSTEM" | "LIGHT" | "DARK";
 };
 
 type InstallPromptEvent = Event & {
@@ -161,10 +159,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }
 
         const nextUser = await apiFetch<SessionUser>("/auth/me");
-        if (!localStorage.getItem("nextfi-theme")) {
-          localStorage.setItem("nextfi-theme", nextUser.themePreference);
-          applyTheme(nextUser.themePreference);
-        }
         await setActiveUser(nextUser);
         await syncOfflineQueue(nextUser.id);
 
@@ -319,7 +313,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="topbar-actions">
             {offline && <span className="status-pill">Offline</span>}
-            <ThemeControl compact syncAccount={!offline} />
             <button type="button" className="button button-dark button-small desktop-add" onClick={() => openTransaction()}>
               + Add transaction
             </button>
@@ -384,11 +377,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </AppNavLink>
             ))}
           </nav>
-
-          <div className="drawer-section">
-            <span className="eyebrow">Appearance</span>
-            <ThemeControl syncAccount={!offline} />
-          </div>
 
           <div className="drawer-links">
             {!nativeApp && <button type="button" onClick={() => void installApp()}>Install app</button>}
