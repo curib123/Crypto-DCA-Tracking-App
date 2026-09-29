@@ -10,89 +10,74 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <main className="auth-page auth-page-nextfi">
-      <section className="auth-shell">
-        <aside className="auth-visual" aria-label="NextFi product introduction">
-          <Link href="/" className="brand auth-visual-brand" aria-label="NextFi home">
-            <NextFiLogo />
-            <span>NextFi</span>
-          </Link>
+    <main className="auth-page auth-login-page">
+      <section className="login-brand-panel" aria-label="About NextFi">
+        <Link href="/" className="brand login-brand" aria-label="NextFi home">
+          <NextFiLogo />
+          <span>NextFi</span>
+        </Link>
 
-          <div className="auth-visual-copy">
-            <span className="auth-kicker">DCA · PORTFOLIO · INSIGHTS</span>
-            <h1>Invest with context, not clutter.</h1>
-            <p>
-              Track your crypto DCA, average cost, break-even and portfolio performance
-              in one focused workspace.
-            </p>
+        <div className="login-brand-copy">
+          <div className="login-brand-status">
+            <span className="login-status-dot" />
+            DCA portfolio workspace
           </div>
+          <h1>Build your position.<br />Know your numbers.</h1>
+          <p>
+            Track every crypto buy, weighted average cost, break-even and portfolio performance
+            without turning your investing routine into a trading terminal.
+          </p>
 
-          <div className="auth-preview" aria-hidden="true">
-            <div className="auth-preview-head">
-              <span>Portfolio overview</span>
-              <span className="auth-preview-live">Live</span>
-            </div>
-            <strong>$4,842.18</strong>
-            <span className="auth-preview-gain">+18.42% lifetime</span>
-            <div className="auth-preview-bars">
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
+          <div className="login-feature-list" aria-label="NextFi benefits">
+            <div><span>01</span><strong>Ledger-based tracking</strong><small>Your transactions stay the source of truth.</small></div>
+            <div><span>02</span><strong>Clear DCA analytics</strong><small>Average cost, fees and P/L in one place.</small></div>
+            <div><span>03</span><strong>Private by design</strong><small>No wallet seed phrases or private keys.</small></div>
           </div>
+        </div>
 
-          <div className="auth-trust-row">
-            <span>Private portfolio</span>
-            <span>No wallet custody</span>
-            <span>Google identity</span>
-          </div>
-        </aside>
+        <div className="login-brand-foot">
+          <span>NextFi Software</span>
+          <span>Crypto DCA Tracking</span>
+        </div>
+      </section>
 
-        <section className="auth-panel">
-          <div className="auth-mobile-brand">
+      <section className="login-access-panel">
+        <div className="login-access-shell">
+          <div className="login-mobile-top">
             <Link href="/" className="brand" aria-label="NextFi home">
               <NextFiLogo />
               <span>NextFi</span>
             </Link>
+            <Link href="/" className="login-back-link">Back</Link>
           </div>
 
-          <div className="auth-panel-inner">
-            <Link href="/" className="auth-back-link" aria-label="Back to NextFi home">
-              <span aria-hidden="true">←</span>
-              <span>Back to home</span>
-            </Link>
-
-            <div className="auth-heading auth-heading-modern">
-              <p className="eyebrow">Secure account access</p>
-              <h1>Welcome to NextFi.</h1>
-              <p>
-                Sign in with Google to open your private DCA tracking workspace.
-              </p>
+          <div className="login-access-content">
+            <div className="login-symbol" aria-hidden="true">
+              <NextFiLogo />
             </div>
+            <p className="eyebrow">Welcome to NextFi</p>
+            <h1>Sign in to your portfolio.</h1>
+            <p className="login-lead">
+              Continue with Google to securely access your synchronized DCA portfolio across web,
+              PWA and Android.
+            </p>
 
             <GoogleSignIn />
 
-            <div className="auth-security-note">
-              <span className="auth-security-icon" aria-hidden="true">✓</span>
+            <div className="login-security-note">
+              <span className="login-status-dot" />
               <div>
-                <strong>Simple and secure</strong>
-                <p>No separate password, wallet connection, seed phrase or private key required.</p>
+                <strong>Secure account access</strong>
+                <span>Google is used for identity only. NextFi never asks for wallet credentials.</span>
               </div>
             </div>
           </div>
 
-          <footer className="auth-footer">
-            <span>By continuing, you agree to NextFi&apos;s</span>
-            <div>
-              <Link href="/terms">Terms</Link>
-              <span>·</span>
-              <Link href="/privacy">Privacy</Link>
-            </div>
-          </footer>
-        </section>
+          <p className="login-legal">
+            By continuing, you agree to the <Link href="/terms">Terms</Link> and acknowledge the{" "}
+            <Link href="/privacy">Privacy Policy</Link>.
+          </p>
+        </div>
       </section>
     </main>
   );
