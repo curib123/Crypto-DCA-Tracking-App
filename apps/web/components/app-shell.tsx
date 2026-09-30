@@ -325,7 +325,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="app-topbar">
           <div className="desktop-topbar-copy">
             <span className="eyebrow">{offline ? "Offline mode" : "NextFi portfolio"}</span>
-            <strong>{offline ? "Reading synchronized data." : "Track cost, value and DCA in one place."}</strong>
+            <strong>{offline ? "Reading synchronized data." : "Track every DCA. Know your average. See your progress."}</strong>
           </div>
 
           <div className="mobile-topbar">
@@ -338,7 +338,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="topbar-actions">
             {offline && <span className="status-pill">Offline</span>}
             <button type="button" className="button button-dark button-small desktop-add" onClick={() => openTransaction()}>
-              + Add transaction
+              + Add DCA
             </button>
             <button type="button" className="account-button" onClick={() => setDrawerOpen(true)} aria-label="Open profile menu">{initials}</button>
           </div>
@@ -359,7 +359,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
 
-        <button type="button" className="mobile-add-action" onClick={() => openTransaction()} aria-label="Add transaction">
+        <button type="button" className="mobile-add-action" onClick={() => openTransaction()} aria-label="Add DCA purchase">
           <span><NavIcon name="plus" size={22} /></span>
           <small>Add</small>
         </button>

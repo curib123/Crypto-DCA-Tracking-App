@@ -62,6 +62,13 @@ function cadenceLabel(frequency: Frequency) {
   return "Every month";
 }
 
+function monthlyEquivalent(plan: DcaPlan) {
+  const amount = Number(plan.amount);
+  if (plan.frequency === "WEEKLY") return amount * 52 / 12;
+  if (plan.frequency === "BIWEEKLY") return amount * 26 / 12;
+  return amount;
+}
+
 function blankDraft(currency = "USD"): Draft {
   return {
     assetSymbol: "BTC",
@@ -111,6 +118,12 @@ export function DcaPlansClient() {
   const dueSoon = useMemo(
     () => plans.filter((plan) => plan.enabled && nextDue(plan).getTime() - Date.now() <= 7 * 24 * 60 * 60 * 1000).length,
     [plans],
+  );
+  const monthlyTarget = useMemo(
+    () => plans
+      .filter((plan) => plan.enabled && plan.quoteCurrency === baseCurrency)
+      .reduce((sum, plan) => sum + monthlyEquivalent(plan), 0),
+    [baseCurrency, plans],
   );
 
   function openCreate() {
@@ -209,9 +222,9 @@ export function DcaPlansClient() {
       </div>
 
       <section className="dca-plan-summary">
+        <article className="panel"><span>Monthly target</span><strong>{formatMoney(monthlyTarget, baseCurrency)}</strong><small>From active {baseCurrency} plans.</small></article>
         <article className="panel"><span>Active plans</span><strong>{activeCount}</strong></article>
         <article className="panel"><span>Due in 7 days</span><strong>{dueSoon}</strong></article>
-        <article className="panel"><span>Execution</span><strong>Manual</strong><small>NextFi never places trades.</small></article>
       </section>
 
       {error && <div className="form-error dca-plan-error">{error}</div>}

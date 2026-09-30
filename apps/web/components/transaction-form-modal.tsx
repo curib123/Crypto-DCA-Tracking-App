@@ -135,9 +135,9 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
   return (
     <AppModal
       open={open}
-      title="Add transaction"
-      eyebrow="Portfolio activity"
-      description="Record a buy, sell, transfer or reward. NextFi rebuilds cost basis from the ledger."
+      title={type === "BUY" ? "Add DCA purchase" : "Add transaction"}
+      eyebrow={type === "BUY" ? "DCA purchase" : "Portfolio activity"}
+      description={type === "BUY" ? "Record the real purchase. NextFi updates average entry, invested amount and profit/loss automatically." : "Record non-DCA portfolio activity without cluttering the main purchase flow."}
       onClose={onClose}
       size="lg"
       dismissible={!busy}
@@ -161,21 +161,16 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
           </select>
         </label>
 
-        <fieldset className="transaction-type-field">
-          <legend>Transaction type</legend>
-          <div className="segment-control">
+        <label className="field transaction-type-select">
+          <span>Transaction type</span>
+          <select value={type} onChange={(event) => setType(event.target.value)}>
             {transactionTypes.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={type === item ? "active" : undefined}
-                onClick={() => setType(item)}
-              >
-                {item.replaceAll("_", " ")}
-              </button>
+              <option key={item} value={item}>
+                {item === "BUY" ? "DCA buy" : item.replaceAll("_", " ")}
+              </option>
             ))}
-          </div>
-        </fieldset>
+          </select>
+        </label>
 
         <div className="modal-form-grid">
           <label className="field">
@@ -242,7 +237,7 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
         <div className="modal-form-actions">
           <button type="button" className="button button-light" onClick={onClose} disabled={busy}>Cancel</button>
           <button type="submit" className="button button-dark" disabled={busy}>
-            {busy ? "Saving…" : typeof navigator !== "undefined" && !navigator.onLine ? "Save offline" : "Save transaction"}
+            {busy ? "Saving…" : typeof navigator !== "undefined" && !navigator.onLine ? "Save offline" : type === "BUY" ? "Save DCA purchase" : "Save transaction"}
           </button>
         </div>
       </form>

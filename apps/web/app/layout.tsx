@@ -29,11 +29,11 @@ const themeBootstrap = `
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "NextFi — Crypto DCA Tracking & Portfolio Analytics",
+    default: "NextFi — Crypto DCA Tracker",
     template: "%s | NextFi",
   },
   description:
-    "Track crypto DCA investments, weighted average cost, break-even, fees, portfolio value and profit/loss in the installable NextFi PWA.",
+    "Track crypto DCA purchases, average entry, total invested, profit/loss, monthly targets and long-term contribution progress in NextFi.",
   applicationName: "NextFi",
   category: "finance",
   keywords: [
@@ -52,13 +52,13 @@ export const metadata: Metadata = {
     siteName: "NextFi",
     title: "NextFi — Crypto DCA Tracking",
     description:
-      "Track real DCA contributions, average cost, break-even and portfolio performance.",
+      "Track every DCA, know your average entry and see your monthly progress.",
   },
   twitter: {
     card: "summary",
     title: "NextFi — Crypto DCA Tracking",
     description:
-      "A clean DCA tracker for real contributions, weighted average cost, break-even and P/L.",
+      "A simple DCA tracker for average entry, total invested, profit/loss, schedules and progress.",
   },
   robots: {
     index: true,

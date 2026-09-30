@@ -1215,3 +1215,183 @@
     margin-top: 14px;
   }
 }
+
+
+/* ===== DCA-first mobile dashboard ===== */
+@media (max-width: 820px) {
+  .dca-focus-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, .62fr);
+  }
+
+  .dca-progress-card,
+  .next-dca-card,
+  .dca-pace-card {
+    padding: 17px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dca-focus-grid {
+    margin-top: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .next-dca-card {
+    min-height: 176px;
+  }
+
+  .next-dca-card > strong {
+    padding-top: 20px;
+  }
+
+  .dca-progress-numbers {
+    margin-top: 22px;
+  }
+
+  .dca-progress-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dca-pace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dca-pace-grid > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dca-pace-grid > div:last-child {
+    border-bottom: 0;
+  }
+
+  .dca-asset-row .home-asset-name span {
+    max-width: 54vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+}
+
+
+/* ===== Flutter-like mobile scaffold ===== */
+@media (max-width: 820px) {
+  .app-main {
+    min-height: 100dvh;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .app-topbar {
+    min-height: calc(60px + env(safe-area-inset-top));
+    padding:
+      env(safe-area-inset-top)
+      max(14px, env(safe-area-inset-right))
+      0
+      max(10px, env(safe-area-inset-left));
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mobile-topbar {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-topbar .brand-app {
+    min-width: 0;
+  }
+
+  .mobile-topbar .brand-app span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-page {
+    padding-top: 16px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-nav {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    min-height: calc(72px + env(safe-area-inset-bottom));
+    padding:
+      7px
+      max(8px, env(safe-area-inset-right))
+      max(7px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+    border-width: 1px 0 0;
+    border-radius: 24px 24px 0 0;
+    background: color-mix(in srgb, var(--surface) 98%, transparent);
+    box-shadow: 0 -8px 30px rgba(15, 23, 42, .12);
+  }
+
+  .mobile-nav a {
+    min-height: 54px;
+    border-radius: 16px;
+    gap: 5px;
+  }
+
+  .mobile-nav a.active::after {
+    bottom: 2px;
+    width: 20px;
+  }
+
+  .mobile-add-action {
+    min-height: 60px;
+    margin-top: -26px;
+  }
+
+  .mobile-add-action > span {
+    width: 54px;
+    height: 54px;
+    border-radius: 19px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .22);
+  }
+
+  .drawer-layer {
+    max-width: 100vw;
+  }
+
+  .app-drawer {
+    left: 0;
+    right: auto;
+    width: min(360px, calc(100vw - 28px));
+    padding:
+      max(18px, env(safe-area-inset-top))
+      18px
+      max(18px, env(safe-area-inset-bottom))
+      max(18px, env(safe-area-inset-left));
+  }
+
+  .app-drawer .drawer-logout {
+    min-height: 50px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .mobile-nav {
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .app-drawer {
+    width: min(340px, calc(100vw - 22px));
+  }
+}
