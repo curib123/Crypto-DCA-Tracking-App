@@ -104,6 +104,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousOverscroll = document.body.style.overscrollBehavior;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.overscrollBehavior = previousOverscroll;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
     setNativeApp(Capacitor.isNativePlatform());
 
     const onTransaction = (event: Event) => {
