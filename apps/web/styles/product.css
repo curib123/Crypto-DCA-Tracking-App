@@ -2119,3 +2119,214 @@ html[data-theme="dark"] .mobile-add-action > span {
 .table-wrap {
   min-width: 0;
 }
+
+
+/* ===== DCA-first product focus ===== */
+.dca-first-dashboard {
+  display: grid;
+  gap: 0;
+}
+
+.dca-focus-grid {
+  margin: 18px 0 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(240px, .65fr);
+  gap: 12px;
+}
+
+.dca-progress-card,
+.next-dca-card,
+.dca-pace-card {
+  padding: 20px;
+}
+
+.dca-focus-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.dca-focus-head h2 {
+  margin: 5px 0 0;
+  font-size: 18px;
+}
+
+.dca-focus-head > a {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.dca-focus-head > a:hover {
+  color: var(--ink);
+}
+
+.dca-progress-numbers {
+  margin-top: 28px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dca-progress-numbers strong {
+  font-size: clamp(26px, 3vw, 38px);
+  letter-spacing: -.05em;
+}
+
+.dca-progress-numbers span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dca-progress-track {
+  height: 9px;
+  margin-top: 15px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.dca-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-teal), var(--brand-azure));
+  transition: width .25s ease;
+}
+
+.dca-progress-foot {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.dca-progress-card > small {
+  display: block;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.dca-empty-compact {
+  margin-top: 24px;
+}
+
+.dca-empty-compact strong {
+  display: block;
+  font-size: 16px;
+}
+
+.dca-empty-compact p {
+  max-width: 520px;
+  margin: 7px 0 14px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.next-dca-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.next-dca-card > strong {
+  margin-top: auto;
+  padding-top: 26px;
+  font-size: clamp(30px, 4vw, 44px);
+  letter-spacing: -.055em;
+}
+
+.next-dca-card > p {
+  margin: 7px 0 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dca-asset-list {
+  margin-bottom: 18px;
+}
+
+.dca-asset-row .home-asset-name span {
+  font-variant-numeric: tabular-nums;
+}
+
+.dca-pace-card {
+  margin-top: 2px;
+}
+
+.dca-pace-grid {
+  margin: 20px 0 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.dca-pace-grid > div {
+  min-width: 0;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+}
+
+.dca-pace-grid > div:last-child {
+  border-right: 0;
+}
+
+.dca-pace-grid span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.dca-pace-grid strong {
+  font-size: 17px;
+  letter-spacing: -.035em;
+}
+
+.transaction-more-types {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.transaction-more-types summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+}
+
+.transaction-more-types summary::-webkit-details-marker {
+  display: none;
+}
+
+.transaction-more-types summary::after {
+  content: "+";
+  margin-left: auto;
+}
+
+.transaction-more-types[open] summary::after {
+  content: "−";
+}
+
+.segment-control.secondary {
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.segment-control.secondary button {
+  flex: 1 1 120px;
+}
