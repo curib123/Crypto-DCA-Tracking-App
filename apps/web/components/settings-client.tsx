@@ -97,7 +97,7 @@ export function SettingsClient() {
       <section className="settings-list panel">
         <a className="settings-list-item" href="/" target="_self">
           <div className="settings-icon">i</div>
-          <div><strong>About NextFi</strong><span>Crypto DCA tracking, cost basis and portfolio analytics.</span></div>
+          <div><strong>About NextFi</strong><span>Long-term crypto DCA tracking, average entry, P/L and progress.</span></div>
           <span className="settings-value">›</span>
         </a>
         <a className="settings-list-item" href="/app/help">
