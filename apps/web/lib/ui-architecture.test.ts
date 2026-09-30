@@ -85,3 +85,18 @@ test("mobile PWA navigation keeps four destinations plus the primary add action"
   assert.equal(shell.includes("mobile-add-action"), true);
   assert.equal(shell.includes("nextfi-open-transaction"), true);
 });
+
+
+test("mobile shell uses a left drawer and transaction type select", async () => {
+  const [product, responsive, transactionForm] = await Promise.all([
+    readFile(new URL("../styles/product.css", import.meta.url), "utf8"),
+    readFile(new URL("../styles/responsive.css", import.meta.url), "utf8"),
+    readFile(new URL("../components/transaction-form-modal.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.equal(product.includes("transform: translateX(-100%);"), true);
+  assert.equal(product.includes("border-radius: 0 24px 24px 0;"), true);
+  assert.equal(responsive.includes("border-radius: 24px 24px 0 0;"), true);
+  assert.equal(transactionForm.includes("transaction-type-select"), true);
+  assert.equal(transactionForm.includes("More activity types"), false);
+});
