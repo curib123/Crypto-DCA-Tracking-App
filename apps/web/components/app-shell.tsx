@@ -359,7 +359,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
 
-        <button type="button" className="mobile-add-action" onClick={() => openTransaction()} aria-label="Add transaction">
+        <button type="button" className="mobile-add-action" onClick={() => openTransaction()} aria-label="Add DCA purchase">
           <span><NavIcon name="plus" size={22} /></span>
           <small>Add</small>
         </button>
