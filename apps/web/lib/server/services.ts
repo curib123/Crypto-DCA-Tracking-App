@@ -682,9 +682,40 @@ function normalizeLanding(value: unknown): LandingContent {
   };
 }
 
+function upgradeLegacyLanding(content: LandingContent): LandingContent {
+  const legacy = {
+    announcement: "Installable PWA · DCA-first portfolio analytics",
+    heroEyebrow: "Crypto DCA, made measurable",
+    heroTitle: "Know exactly what your DCA is doing.",
+    heroDescription: "Track real contributions, weighted average cost, break-even, fees and portfolio performance in one clean workspace.",
+    primaryCtaLabel: "Continue with Google",
+    secondaryCtaLabel: "Install NextFi",
+    seoTitle: "NextFi — Crypto DCA Tracking & Portfolio Analytics",
+    seoDescription: "Track crypto DCA contributions, weighted average cost, break-even, portfolio value and profit/loss in an installable PWA.",
+  };
+
+  return {
+    ...content,
+    announcement: content.announcement === legacy.announcement ? DEFAULT_LANDING_CONTENT.announcement : content.announcement,
+    heroEyebrow: content.heroEyebrow === legacy.heroEyebrow ? DEFAULT_LANDING_CONTENT.heroEyebrow : content.heroEyebrow,
+    heroTitle: content.heroTitle === legacy.heroTitle ? DEFAULT_LANDING_CONTENT.heroTitle : content.heroTitle,
+    heroDescription: content.heroDescription === legacy.heroDescription ? DEFAULT_LANDING_CONTENT.heroDescription : content.heroDescription,
+    primaryCtaLabel: content.primaryCtaLabel === legacy.primaryCtaLabel ? DEFAULT_LANDING_CONTENT.primaryCtaLabel : content.primaryCtaLabel,
+    secondaryCtaLabel: content.secondaryCtaLabel === legacy.secondaryCtaLabel ? DEFAULT_LANDING_CONTENT.secondaryCtaLabel : content.secondaryCtaLabel,
+    seoTitle: content.seoTitle === legacy.seoTitle ? DEFAULT_LANDING_CONTENT.seoTitle : content.seoTitle,
+    seoDescription: content.seoDescription === legacy.seoDescription ? DEFAULT_LANDING_CONTENT.seoDescription : content.seoDescription,
+    features: content.features.some((feature) => feature.title === "Mistral AI insights")
+      ? DEFAULT_LANDING_CONTENT.features
+      : content.features,
+    faq: content.faq.length === 3 && content.faq.some((item) => item.question === "How is average cost calculated?")
+      ? DEFAULT_LANDING_CONTENT.faq
+      : content.faq,
+  };
+}
+
 export async function getLandingContent() {
   const row = await prisma.siteSetting.findUnique({ where: { key: "landing" } });
-  return normalizeLanding(row?.value);
+  return upgradeLegacyLanding(normalizeLanding(row?.value));
 }
 
 export async function saveLandingContent(value: unknown) {
