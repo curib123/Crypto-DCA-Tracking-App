@@ -571,57 +571,61 @@ export type LandingContent = {
 
 export const DEFAULT_LANDING_CONTENT: LandingContent = {
   brandName: "NextFi",
-  announcement: "Installable PWA · DCA-first portfolio analytics",
-  heroEyebrow: "Crypto DCA, made measurable",
-  heroTitle: "Know exactly what your DCA is doing.",
+  announcement: "Built for long-term crypto DCA investors",
+  heroEyebrow: "The simple crypto DCA tracker",
+  heroTitle: "Track every DCA. Know your average. See your progress.",
   heroDescription:
-    "Track real contributions, weighted average cost, break-even, fees and portfolio performance in one clean workspace.",
-  primaryCtaLabel: "Continue with Google",
-  secondaryCtaLabel: "Install NextFi",
+    "See how much you invested, what it is worth now, your average entry, profit/loss, next DCA and monthly progress without a trading-terminal dashboard.",
+  primaryCtaLabel: "Start tracking free",
+  secondaryCtaLabel: "Try the DCA calculator",
   features: [
     {
-      title: "Real cost basis",
-      description: "Weighted calculations are rebuilt from your transaction ledger instead of editable totals.",
+      title: "Average entry, automatically",
+      description: "Record each purchase and NextFi recalculates weighted average entry and remaining cost basis for every coin.",
     },
     {
-      title: "Clear performance",
-      description: "Keep invested capital, current value, realized P/L and unrealized P/L separate.",
+      title: "DCA progress",
+      description: "Turn weekly, biweekly or monthly plans into a simple monthly target and see how much is left to contribute.",
     },
     {
-      title: "Multi-currency",
-      description: "Preserve original quote currencies while reporting consistently in your chosen base currency.",
+      title: "Profit/loss that stays understandable",
+      description: "Keep total invested, current value, profit/loss and return percentage separate and easy to scan.",
+    },
+    {
+      title: "PHP, USD, USDT and more",
+      description: "Track purchases in supported quote currencies while keeping one reporting currency for your portfolio.",
     },
     {
       title: "Offline-ready",
-      description: "Read synchronized portfolio data and queue transactions when your connection drops.",
+      description: "Read synchronized portfolio data and queue supported purchases when your connection drops.",
     },
     {
-      title: "Visual analytics",
-      description: "Use focused charts for allocation and performance where a visual actually adds information.",
-    },
-    {
-      title: "Mistral AI insights",
-      description: "Explain calculated portfolio analytics without giving an AI custody or trading access.",
+      title: "Long-term contribution scenarios",
+      description: "See how your recurring DCA amount adds up over time without presenting a price scenario as a prediction.",
     },
   ],
   faq: [
     {
-      question: "Does NextFi hold or trade my cryptocurrency?",
-      answer: "No. NextFi is a tracking and analytics application. It does not custody funds or execute trades.",
+      question: "Is NextFi a trading app?",
+      answer: "No. NextFi is built for tracking long-term DCA purchases, cost basis, progress and portfolio performance. It does not execute trades.",
     },
     {
-      question: "How is average cost calculated?",
-      answer: "NextFi recalculates weighted cost basis from your transaction ledger.",
+      question: "How is average entry calculated?",
+      answer: "NextFi rebuilds weighted average cost from your recorded transaction ledger, so each real purchase contributes to the result.",
+    },
+    {
+      question: "How does monthly DCA progress work?",
+      answer: "Active DCA plans are converted into a monthly contribution target, then NextFi compares that target with the BUY transactions you recorded during the current month.",
     },
     {
       question: "Does NextFi work offline?",
       answer: "Previously synchronized portfolio data can be read offline, and supported transaction entries can be queued for later synchronization.",
     },
   ],
-  footerText: "Portfolio tracking and analytics only. Not financial advice.",
-  seoTitle: "NextFi — Crypto DCA Tracking & Portfolio Analytics",
+  footerText: "Crypto DCA tracking and contribution scenarios only. Not financial advice.",
+  seoTitle: "NextFi — Crypto DCA Tracker for Average Price, P/L & Goals",
   seoDescription:
-    "Track crypto DCA contributions, weighted average cost, break-even, portfolio value and profit/loss in an installable PWA.",
+    "Track crypto DCA purchases, average entry price, total invested, profit/loss, monthly DCA progress and long-term contribution scenarios in NextFi.",
 };
 
 function safeText(value: unknown, fallback: string, max: number) {
