@@ -10,6 +10,8 @@ import { getCryptoMeta } from "@/lib/crypto-meta";
 const assetOptions = ["BTC", "ETH", "SOL", "BNB", "LINK", "HYPE", "XLM"];
 const currencies = ["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "SGD", "JPY", "KRW", "MYR", "IDR", "THB", "USDT", "USDC"];
 const transactionTypes = ["BUY", "SELL", "TRANSFER_IN", "TRANSFER_OUT", "AIRDROP", "REWARD", "STAKING_REWARD", "FEE", "ADJUSTMENT"];
+const primaryTransactionTypes = ["BUY", "SELL"];
+const moreTransactionTypes = transactionTypes.filter((item) => !primaryTransactionTypes.includes(item));
 
 type UserProfile = {
   id: string;
@@ -135,9 +137,9 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
   return (
     <AppModal
       open={open}
-      title="Add transaction"
-      eyebrow="Portfolio activity"
-      description="Record a buy, sell, transfer or reward. NextFi rebuilds cost basis from the ledger."
+      title={type === "BUY" ? "Add DCA purchase" : "Add transaction"}
+      eyebrow={type === "BUY" ? "DCA purchase" : "Portfolio activity"}
+      description={type === "BUY" ? "Record the real purchase. NextFi updates average entry, invested amount and profit/loss automatically." : "Record non-DCA portfolio activity without cluttering the main purchase flow."}
       onClose={onClose}
       size="lg"
       dismissible={!busy}
@@ -164,16 +166,31 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
         <fieldset className="transaction-type-field">
           <legend>Transaction type</legend>
           <div className="segment-control">
-            {transactionTypes.map((item) => (
+            {primaryTransactionTypes.map((item) => (
               <button
                 key={item}
                 type="button"
                 className={type === item ? "active" : undefined}
                 onClick={() => setType(item)}
               >
-                {item.replaceAll("_", " ")}
+                {item === "BUY" ? "DCA buy" : "Sell"}
               </button>
             ))}
+            <details className="transaction-more-types">
+              <summary>More activity types</summary>
+              <div className="segment-control secondary">
+                {moreTransactionTypes.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={type === item ? "active" : undefined}
+                    onClick={() => setType(item)}
+                  >
+                    {item.replaceAll("_", " ")}
+                  </button>
+                ))}
+              </div>
+            </details>
           </div>
         </fieldset>
 
@@ -242,7 +259,7 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
         <div className="modal-form-actions">
           <button type="button" className="button button-light" onClick={onClose} disabled={busy}>Cancel</button>
           <button type="submit" className="button button-dark" disabled={busy}>
-            {busy ? "Saving…" : typeof navigator !== "undefined" && !navigator.onLine ? "Save offline" : "Save transaction"}
+            {busy ? "Saving…" : typeof navigator !== "undefined" && !navigator.onLine ? "Save offline" : type === "BUY" ? "Save DCA purchase" : "Save transaction"}
           </button>
         </div>
       </form>
