@@ -42,8 +42,6 @@ test("customer and control-panel navigation are centralized", () => {
       "/app/portfolio",
       "/app/transactions",
       "/app/dca-plans",
-      "/app/market",
-      "/app/insights",
       "/app/settings",
     ],
   );
