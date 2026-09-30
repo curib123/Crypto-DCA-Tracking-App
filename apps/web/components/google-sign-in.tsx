@@ -53,6 +53,7 @@ declare global {
 export function GoogleSignIn() {
   const router = useRouter();
   const buttonRef = useRef<HTMLDivElement>(null);
+  const renderedWidthRef = useRef(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [nativeApp, setNativeApp] = useState(false);
@@ -107,12 +108,17 @@ export function GoogleSignIn() {
       auto_select: false,
     });
 
-    buttonRef.current.innerHTML = "";
+    const measuredWidth = Math.floor(buttonRef.current.getBoundingClientRect().width);
+    const width = Math.min(420, measuredWidth);
 
-    const width = Math.max(
-      240,
-      Math.min(420, Math.floor(buttonRef.current.getBoundingClientRect().width || 360)),
-    );
+    // Google renders an iframe at the requested width. Wait for a real
+    // measurement instead of falling back to a desktop-sized button that can
+    // overflow narrow mobile viewports.
+    if (width < 200) return;
+    if (renderedWidthRef.current === width && buttonRef.current.childElementCount > 0) return;
+
+    buttonRef.current.innerHTML = "";
+    renderedWidthRef.current = width;
 
     window.google.accounts.id.renderButton(buttonRef.current, {
       theme: "outline",
@@ -129,7 +135,13 @@ export function GoogleSignIn() {
 
     if (!isNative) {
       if (window.google) initializeGoogleWeb();
-      return;
+
+      const target = buttonRef.current;
+      if (!target || typeof ResizeObserver === "undefined") return;
+
+      const observer = new ResizeObserver(() => initializeGoogleWeb());
+      observer.observe(target);
+      return () => observer.disconnect();
     }
 
     if (!clientId) return;
