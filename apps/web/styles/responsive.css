@@ -1215,3 +1215,66 @@
     margin-top: 14px;
   }
 }
+
+
+/* ===== DCA-first mobile dashboard ===== */
+@media (max-width: 820px) {
+  .dca-focus-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, .62fr);
+  }
+
+  .dca-progress-card,
+  .next-dca-card,
+  .dca-pace-card {
+    padding: 17px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dca-focus-grid {
+    margin-top: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .next-dca-card {
+    min-height: 176px;
+  }
+
+  .next-dca-card > strong {
+    padding-top: 20px;
+  }
+
+  .dca-progress-numbers {
+    margin-top: 22px;
+  }
+
+  .dca-progress-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dca-pace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dca-pace-grid > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dca-pace-grid > div:last-child {
+    border-bottom: 0;
+  }
+
+  .dca-asset-row .home-asset-name span {
+    max-width: 54vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .transaction-more-types .segment-control.secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
