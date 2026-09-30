@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { InstallButton } from "@/components/install-button";
 import { NextFiLogo } from "@/components/nextfi-logo";
 import { AdSenseSlot } from "@/components/adsense-slot";
 import { getLandingContent } from "@/lib/landing";
@@ -65,6 +64,7 @@ export default async function LandingPage() {
           <nav className="site-nav" aria-label="Main navigation">
             <a href="#features">Features</a>
             <a href="#how-it-works">How it works</a>
+            <Link href="/dca-calculator">DCA calculator</Link>
             <a href="#faq">FAQ</a>
           </nav>
 
@@ -86,14 +86,14 @@ export default async function LandingPage() {
 
             <div className="hero-actions">
               <Link href="/login" className="button button-dark button-large">{content.primaryCtaLabel}</Link>
-              <InstallButton className="button button-light button-large" label={content.secondaryCtaLabel} />
+              <Link href="/dca-calculator" className="button button-light button-large">{content.secondaryCtaLabel}</Link>
             </div>
 
             <div className="trust-row" aria-label="Product principles">
               <span>No custody</span>
               <span>No seed phrases</span>
-              <span>Ledger-based accounting</span>
-              <span>AI has no trading access</span>
+              <span>Manual DCA tracking stays free</span>
+              <span>Web · PWA · Android</span>
             </div>
           </div>
 
@@ -110,9 +110,9 @@ export default async function LandingPage() {
               <span className="preview-chip">+18.42%</span>
             </div>
             <div className="preview-stats">
-              <div><span>Actual invested</span><strong>$4,088.00</strong></div>
-              <div><span>Lifetime P/L</span><strong>+$754.18</strong></div>
-              <div><span>Fees tracked</span><strong>$22.64</strong></div>
+              <div><span>Total invested</span><strong>$4,088.00</strong></div>
+              <div><span>Total P/L</span><strong>+$754.18</strong></div>
+              <div><span>Monthly DCA</span><strong>$300.00</strong></div>
             </div>
             <div className="preview-bars" aria-hidden="true">
               <span style={{ height: "38%" }} />
@@ -132,19 +132,19 @@ export default async function LandingPage() {
         </section>
 
         <section className="logo-strip" aria-label="Core tracking capabilities">
-          <span>AVERAGE COST</span>
-          <span>BREAK-EVEN</span>
-          <span>REALIZED P/L</span>
-          <span>UNREALIZED P/L</span>
-          <span>AI INSIGHTS</span>
+          <span>AVERAGE ENTRY</span>
+          <span>TOTAL INVESTED</span>
+          <span>PROFIT / LOSS</span>
+          <span>MONTHLY TARGET</span>
+          <span>NEXT DCA</span>
           <span>OFFLINE PWA</span>
         </section>
 
         <section className="section" id="features">
           <div className="section-heading">
             <span className="eyebrow">Built for long-term DCA</span>
-            <h2>Useful analytics without turning investing into a trading terminal.</h2>
-            <p>NextFi uses your transaction ledger as the source of truth and adds market data only where it helps explain the position.</p>
+            <h2>The numbers a long-term DCA investor actually checks.</h2>
+            <p>How much did I put in? What is it worth? What is my average entry? Am I profitable? When do I invest again?</p>
           </div>
           <div className="feature-grid">
             {content.features.map((feature, index) => (
@@ -160,14 +160,14 @@ export default async function LandingPage() {
         <section className="section split-section" id="how-it-works">
           <div className="section-heading sticky-heading">
             <span className="eyebrow">How it works</span>
-            <h2>Record once. Recalculate everything.</h2>
-            <p>Transactions remain the source of truth; charts and AI explanations are derived from those deterministic calculations.</p>
+            <h2>Record the purchase. NextFi handles the math.</h2>
+            <p>Your real DCA history stays the source of truth, while plans and projections stay clearly separate from completed purchases.</p>
           </div>
           <div className="steps">
-            <article><span>01</span><div><h3>Record the transaction</h3><p>Add the actual amount, quantity, fees, currency and date.</p></div></article>
-            <article><span>02</span><div><h3>Rebuild cost basis</h3><p>NextFi calculates weighted average cost, break-even and remaining basis.</p></div></article>
-            <article><span>03</span><div><h3>Layer market data</h3><p>Current prices produce portfolio value and unrealized performance without changing the ledger.</p></div></article>
-            <article><span>04</span><div><h3>Explain the data</h3><p>Focused charts and optional AI-assisted text turn the numbers into understandable observations.</p></div></article>
+            <article><span>01</span><div><h3>Add your DCA purchase</h3><p>Record the coin, money amount, quantity, price and date.</p></div></article>
+            <article><span>02</span><div><h3>Know your average</h3><p>NextFi recalculates weighted average entry, invested amount and profit/loss.</p></div></article>
+            <article><span>03</span><div><h3>Set your DCA plan</h3><p>Choose weekly, biweekly or monthly contributions and see your next planned date.</p></div></article>
+            <article><span>04</span><div><h3>See your progress</h3><p>Compare this month’s real purchases with your target and see how the habit adds up over time.</p></div></article>
           </div>
         </section>
 
@@ -190,12 +190,12 @@ export default async function LandingPage() {
 
         <section className="final-cta">
           <div>
-            <span className="eyebrow inverse">Your ledger. Your numbers.</span>
-            <h2>Track DCA with less guesswork.</h2>
-            <p>Install NextFi, record your real transactions and keep the analytics explainable.</p>
+            <span className="eyebrow inverse">One purchase at a time.</span>
+            <h2>Track your DCA without the trading-terminal noise.</h2>
+            <p>Record real purchases, know your average entry and see whether you are on pace for the month.</p>
           </div>
           <div className="hero-actions">
-            <Link href="/app" className="button button-white button-large">Open NextFi</Link>
+            <Link href="/login" className="button button-white button-large">Start tracking free</Link>
           </div>
         </section>
 
