@@ -10,8 +10,6 @@ import { getCryptoMeta } from "@/lib/crypto-meta";
 const assetOptions = ["BTC", "ETH", "SOL", "BNB", "LINK", "HYPE", "XLM"];
 const currencies = ["USD", "PHP", "EUR", "GBP", "AUD", "CAD", "SGD", "JPY", "KRW", "MYR", "IDR", "THB", "USDT", "USDC"];
 const transactionTypes = ["BUY", "SELL", "TRANSFER_IN", "TRANSFER_OUT", "AIRDROP", "REWARD", "STAKING_REWARD", "FEE", "ADJUSTMENT"];
-const primaryTransactionTypes = ["BUY", "SELL"];
-const moreTransactionTypes = transactionTypes.filter((item) => !primaryTransactionTypes.includes(item));
 
 type UserProfile = {
   id: string;
@@ -163,36 +161,16 @@ export function TransactionFormModal({ open, onClose, initialAsset = "BTC", onSa
           </select>
         </label>
 
-        <fieldset className="transaction-type-field">
-          <legend>Transaction type</legend>
-          <div className="segment-control">
-            {primaryTransactionTypes.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={type === item ? "active" : undefined}
-                onClick={() => setType(item)}
-              >
-                {item === "BUY" ? "DCA buy" : "Sell"}
-              </button>
+        <label className="field transaction-type-select">
+          <span>Transaction type</span>
+          <select value={type} onChange={(event) => setType(event.target.value)}>
+            {transactionTypes.map((item) => (
+              <option key={item} value={item}>
+                {item === "BUY" ? "DCA buy" : item.replaceAll("_", " ")}
+              </option>
             ))}
-            <details className="transaction-more-types">
-              <summary>More activity types</summary>
-              <div className="segment-control secondary">
-                {moreTransactionTypes.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={type === item ? "active" : undefined}
-                    onClick={() => setType(item)}
-                  >
-                    {item.replaceAll("_", " ")}
-                  </button>
-                ))}
-              </div>
-            </details>
-          </div>
-        </fieldset>
+          </select>
+        </label>
 
         <div className="modal-form-grid">
           <label className="field">
