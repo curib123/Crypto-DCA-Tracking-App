@@ -2293,6 +2293,16 @@ html[data-theme="dark"] .mobile-add-action > span {
   letter-spacing: -.035em;
 }
 
+
+.transaction-type-field > .segment-control {
+  flex-wrap: wrap;
+  overflow-x: visible;
+}
+
+.transaction-more-types {
+  flex: 1 0 100%;
+}
+
 .transaction-more-types {
   grid-column: 1 / -1;
   width: 100%;
